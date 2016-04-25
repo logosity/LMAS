@@ -4,51 +4,27 @@
   width: auto;
 }
 
-#screen {
-  padding-left: 10px;
-  border-width: 1px;
-  width: 432px;
-  margin: 0 auto;
-}
-
 .pixel {
-  border-style: solid;
-  border-width: 1px;
-  width: 25px;
-  height: 25px;
-  display: table-cell;
   text-align: center;
-  vertical-align: middle;
-  font-family: 'Inconsolata';
-  font-size: 12pt;
+  vertical-align: bottom;
 }
 
-.screen-label {
-  width: 25px;
-  height: 25px;
-  display: table-cell;
-  text-align: center;
-  vertical-align: middle;
-  font-family: 'Inconsolata';
-  font-size: 14pt;
-  background-color: gray;
-  color: silver;
-  margin-right: 10px;
-  padding-left: 5px;
-}
-
-#memory {
+#screen, #memory {
   vertical-align: middle;
   font-family: 'Inconsolata';
   font-size: 11pt;
 }
 
-#memheader {
+#screen th {
+  text-align: center;
+}
+
+#mem-header {
   text-align: left;
   border: solid;
 }
 
-#membody td {
+#mem-body td {
   text-align: left;
 }
 
