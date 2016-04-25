@@ -37,56 +37,19 @@
   padding-left: 5px;
 }
 
-.memlabel {
-  text-align: right;
-  font-family: 'Inconsolata';
-  background-color: gray;
-  color: silver;
-}
-
-.pc-label {
-  height: 25px;
-  display: table-cell;
-  font-family: 'Inconsolata';
-  font-size: 14pt;
-  text-align: left;
-  vertical-align: middle;
-  background-color: gray;
-  color: silver;
-  padding-left: 5px;
-  padding-right: 9px;
-  border-right: solid;
-  border-right-width: 0.5px;
-  border-right-color: black;
-}
-
-.register-label {
-  height: 25px;
-  display: table-cell;
-  font-family: 'Inconsolata';
-  font-size: 14pt;
-  text-align: left;
-  vertical-align: middle;
-  background-color: gray;
-  color: silver;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-.register-label:after {
-  font-family: 'Inconsolata';
-  font-size: 14pt;
-  content:"  ";
-  white-space: pre;
-}
-
-#registers {
-  margin-bottom: 10px;
-}
-
-#membody td {
-  text-align: center;
+#memory {
   vertical-align: middle;
   font-family: 'Inconsolata';
   font-size: 11pt;
 }
+
+#memheader {
+  text-align: left;
+  border: solid;
+}
+
+#membody td {
+  text-align: left;
+}
+
 

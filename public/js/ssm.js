@@ -41,21 +41,22 @@ function onReady() {
   //  $('#screen').append(row);
   //});
 
+  var registerLabels = $('<tr>').append($('<th>').addClass('lead').text('PC'));
+  var registerValues = $('<tr>').append($('<td>').text('00'));
+  _.each(_.range(16), function(columnNumber) {
+    registerLabels.append($('<th>').addClass('lead').text(sprintf('R%X',columnNumber)));
+    registerValues.append($('<td>').text('0000'));
+  });
+  $('#memheader').append(registerLabels).append(registerValues);
+
   _.each(_.range(16), function(rowNumber) {
     var rowId = sprintf('%02X',rowNumber * 16);
-    var row = $('<tr>').append($('<th>').text(rowId)); //genRow("M" + rowId);
+    var row = $('<tr>').append($('<th>').text(rowId));
     _.each(genColumns(16,"M" + rowId, "memcell"), function(col) {
       row.append(col.text("0000"));
     });
     $('#membody').append(row);
   });
-
-  //$('#register-labels').append($("<div>").addClass("pc-label").text("PC"));
-  //$('#registers').append($("<div>").attr("id","pc").text("00"));
-  //_.each(_.range(16), function(colNumber) {
-  //  $('#register-labels').append($("<div>").addClass("register-label").text(sprintf("R%X",colNumber)));
-  //  $('#registers').append($("<div>").addClass("memcell").attr("id",sprintf("R%X",colNumber)).text("0000"));
-  //});
 
   setPixel("C4", packPixel(3,0,72));
   setPixel("C5", packPixel(3,0,101));
