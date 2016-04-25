@@ -1,49 +1,57 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset=utf-8>
-  <title>Machine</title>
-  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css"/>
-  <link href='https://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
-  <link rel="stylesheet" href="vendor/codemirror-5.14.2/lib/codemirror.css">
-  <link rel="stylesheet" href="vendor/codemirror-5.14.2/theme/cobalt.css">
-  <link rel="stylesheet" href="css/ssm.css">
+<meta charset=utf-8>
+<title>Machine</title>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css"/>
+<link href='https://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="vendor/codemirror-5.14.2/lib/codemirror.css">
+<link rel="stylesheet" href="vendor/codemirror-5.14.2/theme/cobalt.css">
+<link rel="stylesheet" href="css/ssm.css">
 
-  <script src="vendor/codemirror-5.14.2/lib/codemirror.js"></script>
-  <script src="vendor/codemirror-5.14.2/mode/javascript/javascript.js"></script>
-  <script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/sprintf/1.0.3/sprintf.min.js"></script>
-  <script src="js/ssm.js"></script>
-  <script type="text/javascript">
-    $(document).ready(onReady);
-  </script>
+<script src="vendor/codemirror-5.14.2/lib/codemirror.js"></script>
+<script src="vendor/codemirror-5.14.2/mode/javascript/javascript.js"></script>
+<script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sprintf/1.0.3/sprintf.min.js"></script>
+<script src="js/ssm.js"></script>
+<script type="text/javascript">
+$(document).ready(onReady);
+</script>
 </head>
 <body>
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-md-8">
-        <div class="row">
-          <h2 class="text-primary col-md-12">Super Simple Machine (a TOY machine)</h2>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-xs-5">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <ul class="nav nav-pills" id="heading">
+          </ul>
         </div>
-        <div class="row"><div id="register-labels" class="col-md-12"></div></div>
-        <div class="row"><div id="registers" class="col-md-12"></div></div>
-        <div class="row"><div id="memory" class="col-md-12"></div></div>
+        <div class="panel-body">
+          <textarea id="text-editor" name="text-editor" class="form-control"></textarea>
+        </div>
       </div>
-      <div class="col-md-4">
-        <div class="row">
-          <form id='editor'>
-            <div class="form-group well">
-            <label for="comment">Code editor:</label>
-            <textarea id="editor-text"></textarea>
-            </div>
-          </form>
+    </div>
+    <div class="col-xs-7">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h2 class="text-primary">Super Simple Machine (a TOY machine)</h2>
         </div>
-        <div class="row">
-          <div class="col-md-12"><div id="screen"></div></div>
+        <div class="panel-body">
+          <div class="table-responsive">
+            <table class="table table-condensed table-striped">
+              <thead id="memheader"></thead>
+              <tbody id="membody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   </div>
+  <div class="row">
+    <div id="screen"></div>
+  </div>
+</div>
 </body>
- </html>
+</html>

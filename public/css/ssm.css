@@ -1,18 +1,7 @@
 .CodeMirror {
   font-family: 'Inconsolata';
   font-size: 14pt;
-  height: 250px;
-}
-
-#editor {
-  margin-top: 10px;
-}
-
-#editor-text {
-  font-family: 'Inconsolata';
-  font-size: 14pt;
-  color: white;
-  background-color: black;
+  width: auto;
 }
 
 #screen {
@@ -20,10 +9,6 @@
   border-width: 1px;
   width: 432px;
   margin: 0 auto;
-}
-#memory {
-  border-width: 1px;
-  width: 432px;
 }
 
 .pixel {
@@ -54,13 +39,9 @@
 
 .memlabel {
   text-align: right;
-  vertical-align: middle;
   font-family: 'Inconsolata';
-  font-size: 14pt;
   background-color: gray;
   color: silver;
-  margin-right: 10px;
-  padding-left: 5px;
 }
 
 .pc-label {
@@ -78,7 +59,6 @@
   border-right-width: 0.5px;
   border-right-color: black;
 }
-
 
 .register-label {
   height: 25px;
@@ -102,31 +82,11 @@
 #registers {
   margin-bottom: 10px;
 }
-#pc, .memcell {
-  width: 25px;
-  height: 25px;
-  display: table-cell;
+
+#membody td {
   text-align: center;
   vertical-align: middle;
   font-family: 'Inconsolata';
-  font-size: 14pt;
-  background-color: silver;
-  color: black;
-  border-bottom-style: solid;
-  border-bottom-color: white;
-  border-bottom-width: .5px; 
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#pc {
-  padding-right: 9px;
-  border-right: solid;
-  border-right-width: 0.5px;
-}
-
-.data-row {
-  display: table;
-  table-layout: fixed; 
+  font-size: 11pt;
 }
 
