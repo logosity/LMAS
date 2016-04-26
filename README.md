@@ -1,4 +1,4 @@
-# Learning Machine Simulator
+# Learning Machine Architecture Simulator (LMAS)
 This is (will be) an implementation of two educational computer architectures. The first is [TOY](http://introcs.cs.princeton.edu/java/62toy/) while the second is [LMC](http://povinelli.eece.mu.edu/teaching/eece2710/lmc.html#The%20Little%20Man%20Assembly%20Language).
 
 ## Why another implementation?
