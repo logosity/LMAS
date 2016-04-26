@@ -44,9 +44,8 @@ function onReady() {
   $('#mem-header').append(registerLabels).append(registerValues);
 
   _.each(_.range(16), function(rowNumber) {
-    var rowId = sprintf('%02X',rowNumber * 16);
-    var row = $('<tr>').append($('<th>').text(rowId));
-    _.each(genColumns(16,"M" + rowId), function(col) {
+    var row = $('<tr>').append($('<th>').text(sprintf('%02X',rowNumber * 16)));
+    _.each(genColumns(16,"M" + sprintf('%X',rowNumber)), function(col) {
       row.append(col.text("0000"));
     });
     $('#mem-body').append(row);
@@ -58,12 +57,17 @@ function onReady() {
   setPixel("47", packPixel(3,0,108));
   setPixel("48", packPixel(3,0,111));
 
-  var editor = CodeMirror.fromTextArea($('#text-editor')[0], {
+  editor = CodeMirror.fromTextArea($('#text-editor')[0], {
     theme:'cobalt',
     lineNumbers: true,
     styleActiveLine: true,
     matchBrackets: true
   });
+  toy = new Toy();
+  $("#load-instructions").click(function(){
+    toy.load(editor.getValue());
+  });
+
   $(".dropdown-menu li a").click(function(){
     var selText = $(this).text();
     $(this).parents('.btn-group').find('.dropdown-toggle').html(selText+' <span class="caret"></span>');
