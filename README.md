@@ -5,7 +5,11 @@ This is (will be) an implementation of two educational computer architectures. T
 There are several of these available, but by putting both in one easy find and (hopefully) use location, the hope is that people will find it easier to gain a fundamental understanding of how computer architectures work. Plus, it's just fun to implement these sorts of things!
 
 ## Installation
-clone and start a weberver of your choice with the public directory as the root web directory; e.g: cd $project_dir/public; python -m SimpleHTTPServer 
+clone and start a weberver of your choice with the public directory as the root web directory; e.g: 
+```bash
+cd $project_dir/public; python -m SimpleHTTPServer
+```
+
 
 ## Running tests
 [Jasmine](http://jasmine.github.io/) is the test tool we are using for the project. Simply open the test runner thusly (assuming port 8000 is local instance):
