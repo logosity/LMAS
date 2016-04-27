@@ -48,7 +48,7 @@ function onReady() {
     _.each(genColumns(16,"M" + sprintf('%X',rowNumber)), function(col) {
       row.append(col.text("0000"));
     });
-    $('#mem-body').append(row);
+    $('#mem-cells').append(row);
   });
 
   setPixel("44", packPixel(3,0,72));
@@ -64,8 +64,26 @@ function onReady() {
     matchBrackets: true
   });
   toy = new Toy();
+
+  var code = localStorage.getItem('code');
+  if(code !== null) {
+    editor.setValue(code);
+  }
+  
+//  var machine = localStorage.getItem('machine');
+//  if(!?) { 
+//    var memory = toy.load($('#mem-cells'),editor.getValue());
+//  }
+
   $("#load-instructions").click(function(){
-    toy.load(editor.getValue());
+    var memory = toy.load($('#mem-cells'),editor.getValue());
+    $('#mem-cells').replaceWith(memory);
+  });
+
+  $(window).on('beforeunload', function() {
+    localStorage.setItem("code",editor.getValue());
+//    localStorage.setItem("machine",toy.serialize($('#machine')));
+//    $('#mem-cells').replaceWith(memory);
   });
 
   $(".dropdown-menu li a").click(function(){
