@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="vendor/bootstrap.min-3.3.6.css"/>
 <link rel="stylesheet" href="vendor/codemirror-5.14.2/lib/codemirror.css">
 <link rel="stylesheet" href="vendor/codemirror-5.14.2/theme/cobalt.css">
-<link rel="stylesheet" href="css/ssm.css">
+<link rel="stylesheet" href="css/lmas.css">
 
 <script src="vendor/codemirror-5.14.2/lib/codemirror.js"></script>
 <script src="vendor/codemirror-5.14.2/mode/javascript/javascript.js"></script>
@@ -17,7 +17,7 @@
 <script src="vendor/underscore-min-1.8.3.js"></script>
 <script src="vendor/sprintf.min-1.0.3.js"></script>
 <script src="vendor/bootstrap.min-3.3.6.js"></script>
-<script src="js/ssm.js"></script>
+<script src="js/lmas.js"></script>
 <script src="js/toy.js"></script>
 
 <script type="text/javascript">
@@ -32,7 +32,9 @@
       <div class="panel panel-default">
         <div class="panel-heading">
           <ul class="nav nav-pills" id="heading">
-            <li><a role="button" id="load-instructions" data-val="bold" data-toggle="tooltip" data-placement="bottom" title="Bold">Load <i class="fa fa-chevron-circle-right"></i></a></li>
+            <li><a role="button" id="editor-undo" data-val="bold" data-toggle="tooltip" data-placement="bottom" title="Undo"><i class="fa fa-undo"></i></a></li>
+            <li><a role="button" id="editor-redo" data-val="bold" data-toggle="tooltip" data-placement="bottom" title="Redo"><i class="fa fa-repeat"></i></a></li>
+            <li><a role="button" id="editor-load" data-val="bold" data-toggle="tooltip" data-placement="bottom" title="Load"><i class="fa fa-chevron-circle-right"></i></a></li>
           </ul>
         </div>
         <div class="panel-body">

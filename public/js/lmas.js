@@ -75,9 +75,17 @@ function onReady() {
 //    var memory = toy.load($('#mem-cells'),editor.getValue());
 //  }
 
-  $("#load-instructions").click(function(){
+  $("#editor-load").click(function(){
     var memory = toy.load($('#mem-cells'),editor.getValue());
     $('#mem-cells').replaceWith(memory);
+  });
+
+  $("#editor-undo").click(function(){
+    editor.undo();
+  });
+
+  $("#editor-redo").click(function(){
+    editor.redo();
   });
 
   $(window).on('beforeunload', function() {
