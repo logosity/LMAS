@@ -75,17 +75,22 @@ function onReady() {
 //    var memory = toy.load($('#mem-cells'),editor.getValue());
 //  }
 
-  $("#editor-load").click(function(){
+  $(".editor-load").click(function(){
     var memory = toy.load($('#mem-cells'),editor.getValue());
     $('#mem-cells').replaceWith(memory);
   });
 
-  $("#editor-undo").click(function(){
+  $(".editor-undo").click(function(){
     editor.undo();
   });
 
-  $("#editor-redo").click(function(){
+  $(".editor-redo").click(function(){
     editor.redo();
+  });
+
+  $(".machine-tab").click(function(){
+    $('.machine-tab').removeClass('active');   
+    $(this).addClass('active');   
   });
 
   $(window).on('beforeunload', function() {
