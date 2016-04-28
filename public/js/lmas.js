@@ -1,3 +1,31 @@
+//'use strict';
+
+var lmas = {};
+
+lmas.machineView = function(machineType) {
+  return $('<div class="machine-view">');
+};
+
+lmas.showView = function(hash) {
+  var routes = {
+    '#machine': lmas.machineView
+  };
+
+  var hashParts = hash.split("-");
+
+  var viewFn = routes[hashParts[0]];
+  if (viewFn) {
+    $('.view-container').empty().append(viewFn(hashParts[1]));
+  }
+};
+
+lmas.onReady = function() {
+  $(window).on("hashchange",function() { 
+    lmas.showView(window.location.hash);
+  });
+  lmas.showView(window.location.hash);
+};
+
 colors=["black","silver","gray","white","maroon","red","purple","fuchsia","green","lime","olive","yellow","navy","blue","teal","aqua"];
 function packPixel(color, bgcolor, ascii) {
   return (color << 12) | (bgcolor << 8) | ascii;
