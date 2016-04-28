@@ -11,10 +11,36 @@ describe('LMAS', function() {
   });
 
   it('subscribes to the hash change event', function() {
-    lmas.onReady();
+    lmas.initHandlers();
     spyOn(lmas,'showView');
     $(window).trigger('hashchange');
     expect(lmas.showView).toHaveBeenCalledWith(window.location.hash);
   });
+
+  describe('editor panel', function() {
+    it('saves editor to local storage before the page unloads', function() {
+      lmas.initEditor();
+      lmas.initHandlers();
+      spyOn(localStorage,'setItem');
+      spyOn(lmas.editor,'getValue').and.returnValue("1234");
+      $(window).trigger('beforeunload');
+      expect(localStorage.setItem).toHaveBeenCalledWith("code","1234");
+    });
+    it('calls undo on editor when button is clicked', function() {
+      lmas.initEditor();
+      lmas.initHandlers();
+      spyOn(lmas.editor,'undo');
+      $('.editor-undo').trigger('click');
+      expect(lmas.editor.undo).toHaveBeenCalled();
+    });
+    it('calls redo on editor when button is clicked', function() {
+      lmas.initEditor();
+      lmas.initHandlers();
+      spyOn(lmas.editor,'redo');
+      $('.editor-redo').trigger('click');
+      expect(lmas.editor.redo).toHaveBeenCalled();
+    });
+  });
+
 });
 

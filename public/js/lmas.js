@@ -20,11 +20,9 @@ lmas.showView = function(hash) {
   }
 };
 
+
 lmas.onReady = function() {
-  $(window).on("hashchange",function() { 
-    lmas.showView(window.location.hash);
-  });
-  lmas.showView(window.location.hash);
+  lmas.initHandlers();
 };
 
 lmas.packPixel = function(color, bgcolor, ascii) {
@@ -48,7 +46,36 @@ lmas.genColumns = function(length, idPrefix, classes) {
   });
 }
 
+lmas.initHandlers = function() {
+  $(".editor-undo").click(function(){
+    lmas.editor.undo();
+  });
+
+  $(".editor-redo").click(function(){
+    lmas.editor.redo();
+  });
+
+  $(window).on('beforeunload', function() {
+    localStorage.setItem("code",lmas.editor.getValue());
+  });
+
+  $(window).on("hashchange",function() { 
+    lmas.showView(window.location.hash);
+  });
+  lmas.showView(window.location.hash);
+};
+
+lmas.initEditor = function() {
+  lmas.editor = CodeMirror.fromTextArea($('#text-editor')[0], {
+    theme:'cobalt',
+    lineNumbers: true,
+    styleActiveLine: true,
+    matchBrackets: true
+  });
+};
+
 function onReady() {
+  lmas.initEditor();
   var screenLabels = $('<tr>').append($('<th>'));
   _.each(_.range(16), function(columnNumber) {
     screenLabels.append($('<th>').addClass('lead').text(sprintf('%X',columnNumber)));
@@ -85,46 +112,21 @@ function onReady() {
   lmas.setPixel("47", lmas.packPixel(3,0,108));
   lmas.setPixel("48", lmas.packPixel(3,0,111));
 
-  lmas.editor = CodeMirror.fromTextArea($('#text-editor')[0], {
-    theme:'cobalt',
-    lineNumbers: true,
-    styleActiveLine: true,
-    matchBrackets: true
-  });
   lmas.toy = new Toy();
 
   var code = localStorage.getItem('code');
   if(code !== null) {
     lmas.editor.setValue(code);
   }
-  
-//  var machine = localStorage.getItem('machine');
-//  if(!?) { 
-//    var memory = toy.load($('#mem-cells'),editor.getValue());
-//  }
 
   $(".editor-load").click(function(){
     var memory = lmas.toy.load($('#mem-cells'),lmas.editor.getValue());
     $('#mem-cells').replaceWith(memory);
   });
 
-  $(".editor-undo").click(function(){
-    lmas.editor.undo();
-  });
-
-  $(".editor-redo").click(function(){
-    lmas.editor.redo();
-  });
-
   $(".machine-tab").click(function(){
     $('.machine-tab').removeClass('active');   
     $(this).addClass('active');   
-  });
-
-  $(window).on('beforeunload', function() {
-    localStorage.setItem("code",lmas.editor.getValue());
-//    localStorage.setItem("machine",toy.serialize($('#machine')));
-//    $('#mem-cells').replaceWith(memory);
   });
 
   lmas.onReady();
