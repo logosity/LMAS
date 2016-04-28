@@ -1,6 +1,7 @@
-//'use strict';
+'use strict';
 
 var lmas = {};
+lmas.colors=["black","silver","gray","white","maroon","red","purple","fuchsia","green","lime","olive","yellow","navy","blue","teal","aqua"];
 
 lmas.machineView = function(machineType) {
   return $('<div class="machine-view">');
@@ -26,23 +27,22 @@ lmas.onReady = function() {
   lmas.showView(window.location.hash);
 };
 
-colors=["black","silver","gray","white","maroon","red","purple","fuchsia","green","lime","olive","yellow","navy","blue","teal","aqua"];
-function packPixel(color, bgcolor, ascii) {
+lmas.packPixel = function(color, bgcolor, ascii) {
   return (color << 12) | (bgcolor << 8) | ascii;
 }
 
-function setPixel(coords, val) {
+lmas.setPixel = function(coords, val) {
   var ascii = String.fromCharCode(0xFF & val);
   var bgcolor = (0xF00 & val) >> 8;
   var color = (0xF000 & val) >> 12;
-  $('#' + 'V' + coords).text(ascii).css("background-color",colors[bgcolor]).css("color",colors[color]); 
+  $('#' + 'V' + coords).text(ascii).css("background-color",lmas.colors[bgcolor]).css("color",lmas.colors[color]); 
 }
 
-function parseInstruction(code) {
+lmas.parseInstruction = function(code) {
   var matches = code.match(/^([0-9,A-F])([0-9,A-F])([0-9,A-F]{2})$/);
 }
 
-function genColumns(length, idPrefix, classes) {
+lmas.genColumns = function(length, idPrefix, classes) {
   return _.map(_.range(length), function(columnNumber) {
     return $('<td>').addClass(classes).attr("id", idPrefix + sprintf('%X',columnNumber));
   });
@@ -57,7 +57,7 @@ function onReady() {
 
   _.each(_.range(8), function(rowNumber) {
     var row = $('<tr>').append($('<th>').text(sprintf('%X',rowNumber)));
-    _.each(genColumns(16,"V" + sprintf('%X',rowNumber), "pixel"), function(col) {
+    _.each(lmas.genColumns(16,"V" + sprintf('%X',rowNumber), "pixel"), function(col) {
       row.append(col.text(" "));
     });
     $('#screen-body').append(row);
@@ -73,29 +73,29 @@ function onReady() {
 
   _.each(_.range(16), function(rowNumber) {
     var row = $('<tr>').append($('<th>').text(sprintf('%02X',rowNumber * 16)));
-    _.each(genColumns(16,"M" + sprintf('%X',rowNumber)), function(col) {
+    _.each(lmas.genColumns(16,"M" + sprintf('%X',rowNumber)), function(col) {
       row.append(col.text("0000"));
     });
     $('#mem-cells').append(row);
   });
 
-  setPixel("44", packPixel(3,0,72));
-  setPixel("45", packPixel(3,0,101));
-  setPixel("46", packPixel(3,0,108));
-  setPixel("47", packPixel(3,0,108));
-  setPixel("48", packPixel(3,0,111));
+  lmas.setPixel("44", lmas.packPixel(3,0,72));
+  lmas.setPixel("45", lmas.packPixel(3,0,101));
+  lmas.setPixel("46", lmas.packPixel(3,0,108));
+  lmas.setPixel("47", lmas.packPixel(3,0,108));
+  lmas.setPixel("48", lmas.packPixel(3,0,111));
 
-  editor = CodeMirror.fromTextArea($('#text-editor')[0], {
+  lmas.editor = CodeMirror.fromTextArea($('#text-editor')[0], {
     theme:'cobalt',
     lineNumbers: true,
     styleActiveLine: true,
     matchBrackets: true
   });
-  toy = new Toy();
+  lmas.toy = new Toy();
 
   var code = localStorage.getItem('code');
   if(code !== null) {
-    editor.setValue(code);
+    lmas.editor.setValue(code);
   }
   
 //  var machine = localStorage.getItem('machine');
@@ -104,16 +104,16 @@ function onReady() {
 //  }
 
   $(".editor-load").click(function(){
-    var memory = toy.load($('#mem-cells'),editor.getValue());
+    var memory = lmas.toy.load($('#mem-cells'),lmas.editor.getValue());
     $('#mem-cells').replaceWith(memory);
   });
 
   $(".editor-undo").click(function(){
-    editor.undo();
+    lmas.editor.undo();
   });
 
   $(".editor-redo").click(function(){
-    editor.redo();
+    lmas.editor.redo();
   });
 
   $(".machine-tab").click(function(){
@@ -122,15 +122,12 @@ function onReady() {
   });
 
   $(window).on('beforeunload', function() {
-    localStorage.setItem("code",editor.getValue());
+    localStorage.setItem("code",lmas.editor.getValue());
 //    localStorage.setItem("machine",toy.serialize($('#machine')));
 //    $('#mem-cells').replaceWith(memory);
   });
 
-  $(".dropdown-menu li a").click(function(){
-    var selText = $(this).text();
-    $(this).parents('.btn-group').find('.dropdown-toggle').html(selText+' <span class="caret"></span>');
-  });
+  lmas.onReady();
 }
 
 
