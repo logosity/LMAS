@@ -1,6 +1,36 @@
 'use strict';
 
 var lmas = {};
+lmas.partition = function(items, size) {
+    //via: http://stackoverflow.com/a/11345570
+    var result = _.groupBy(items, function(item, i) {
+        return Math.floor(i/size);
+    });
+    return _.values(result);
+}
+
+lmas.addToElement = function(elem, rows, rowHeaders) {
+  var createElement = function(cell) {
+    var elemType = cell.elem ? cell.elem : 'td';
+    var elem = $('<' + elemType + '>');
+    return elem.attr('id',cell.id).addClass(cell.klass).text(cell.text);
+  };
+  var createHeaderElement = function(cell) {
+    if(cell.elem === undefined) cell.elem = 'th';
+    return createElement(cell);
+  };
+
+  var result = elem.clone();
+  _.each(rows, function(row,idx) {
+    var tr = $('<tr>');
+    if(rowHeaders) tr.append(createHeaderElement(rowHeaders[idx]));
+    _.each(row,function(cell) {
+      tr.append(createElement(cell));
+    });
+    result.append(tr);
+  });
+  return result;
+};
 lmas.colors=["black","silver","gray","white","maroon","red","purple","fuchsia","green","lime","olive","yellow","navy","blue","teal","aqua"];
 
 lmas.machineView = function(machineType) {
