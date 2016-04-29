@@ -85,7 +85,7 @@ lmas.onReady = function() {
 };
 
 function onReady() {
-  var editor = CodeMirror.fromTextArea($('#text-editor')[0], {
+  var editor = CodeMirror($('#text-editor')[0], {
     theme:'cobalt',
     lineNumbers: true,
     styleActiveLine: true,
