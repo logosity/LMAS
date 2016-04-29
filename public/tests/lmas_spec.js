@@ -1,22 +1,6 @@
-util = {};
-util.attrs = function(elems, attr) {
-  return _.map(elems, function(e) { 
-    return $(e).attr(attr);
-  });
-};
+'use strict';
 
 describe('LMAS', function() {
-  describe('partition',function() {
-    it('splits arrays into n sized chunks', function() {
-      var a = [1,2,3,4,5,6,7,8];
-      expect(lmas.partition(a,4)).toEqual([[1,2,3,4],[5,6,7,8]]);
-    });
-    it('retains the tail for partials', function() {
-      var a = [1,2,3,4,5,6,7];
-      expect(lmas.partition(a,4)).toEqual([[1,2,3,4],[5,6,7]]);
-    });
-  });
-
   it('shows the landing page view when there is no has', function() {
     lmas.showView('');
     expect($('.view-container .landing-view').length).toEqual(1);
@@ -97,36 +81,35 @@ describe('LMAS', function() {
 
   describe('table generation',function() {
     it('creates rows and columns', function() {
-      var cells = lmas.partition([{},{},{},{}],2);
-      var result = lmas.addToElement($('<div>'),cells);
+      var cells = util.partition([{},{},{},{}],2);
+      var result = lmas.table.appendToElement($('<div>'),cells);
       expect($(result).find('tr').length).toBe(2);
       expect($(result).find('td').length).toBe(4);
     });
     it('makes header cells', function() {
-      var cells = lmas.partition([{elem:'th'},{elem:'td'},{},{}],2);
-      var result = lmas.addToElement($('<div>'),cells);
+      var cells = util.partition([{elem:'th'},{elem:'td'},{},{}],2);
+      var result = lmas.table.appendToElement($('<div>'),cells);
       expect($(result).find('th').length).toBe(1);
       expect($(result).find('td').length).toBe(3);
     });
     it('sets the text field for each cell', function() {
-      var cells = lmas.partition([{text:1},{text:2},{text:3},{text:4}],2);
-      var result = lmas.addToElement($('<div>'),cells);
+      var cells = util.partition([{text:1},{text:2},{text:3},{text:4}],2);
+      var result = lmas.table.appendToElement($('<div>'),cells);
       expect($(result).find('td').text()).toBe('1234');
     });
     it('sets the id of each cell', function() {
-      var cells = lmas.partition([{id:'a'},{id:'b'},{id:'c'},{id:'d'}],2);
-      var result = lmas.addToElement($('<div>'),cells);
+      var cells = util.partition([{id:'a'},{id:'b'},{id:'c'},{id:'d'}],2);
+      var result = lmas.table.appendToElement($('<div>'),cells);
       expect(_.map($(result).find('td'), function(td) { return $(td).attr('id')})).toEqual(['a','b','c','d']);
     });
     it('sets the id of each cell', function() {
-      var cells = lmas.partition([{id:'a'},{id:'b'},{id:'c'},{id:'d'},{}],2);
-      var result = lmas.addToElement($('<div>'),cells);
+      var cells = util.partition([{id:'a'},{id:'b'},{id:'c'},{id:'d'},{}],2);
+      var result = lmas.table.appendToElement($('<div>'),cells);
       expect(util.attrs($(result).find('td'), 'id')).toEqual(['a','b','c','d',undefined]);
     });
     it('sets the class of each cell', function() {
-      var cells = lmas.partition([{klass:'a'},{klass:'a'},{klass:'b'},{klass:'c d'}, {}],2);
-      var result = lmas.addToElement($('<div>'),cells);
-      console.log($(result).find('td'));
+      var cells = util.partition([{klass:'a'},{klass:'a'},{klass:'b'},{klass:'c d'}, {}],2);
+      var result = lmas.table.appendToElement($('<div>'),cells);
       expect($(result).find('td.a').length).toBe(2);
       expect($(result).find('td.b').length).toBe(1);
       expect($(result).find('td.c').length).toBe(1);
@@ -134,13 +117,22 @@ describe('LMAS', function() {
       expect($(result).find('td.c.d').length).toBe(1);
     });
     it('treats first partition as row headers', function() {
-      var cells = lmas.partition([{},{},{},{}],2);
-      var result = lmas.addToElement($('<div>'),cells,[{text:'a'},{text:'b'}]);
+      var cells = util.partition([{},{},{},{}],2);
+      var result = lmas.table.appendToElement($('<div>'),cells,[{text:'a'},{text:'b'}]);
       expect($(result).find('tr').length).toBe(2);
       expect($(result).find('tr:first').children().length).toBe(3);
       expect($(result).find('tr:first>th:first').text()).toEqual('a');
       expect($(result).find('tr:last').children().length).toBe(3);
       expect($(result).find('tr:last>th:first').text()).toEqual('b');
+    });
+    describe('toy memory table',function() {
+      it('generates a table of the proper dimensions', function() {
+        var elem = $('<tbody>');
+        lmas.appendToyMemory(elem);
+        expect($(elem).find('tr').length).toBe(16);
+        expect($(elem).find('th').length).toBe(16);
+        expect($(elem).find('td').length).toBe(256);
+      });
     });
   });
 

@@ -1,15 +1,9 @@
 'use strict';
 
 var lmas = {};
-lmas.partition = function(items, size) {
-    //via: http://stackoverflow.com/a/11345570
-    var result = _.groupBy(items, function(item, i) {
-        return Math.floor(i/size);
-    });
-    return _.values(result);
-}
 
-lmas.addToElement = function(elem, rows, rowHeaders) {
+lmas.table = {};
+lmas.table.appendToElement = function(elem, rows, rowHeaders) {
   var createElement = function(cell) {
     var elemType = cell.elem ? cell.elem : 'td';
     var elem = $('<' + elemType + '>');
@@ -20,17 +14,22 @@ lmas.addToElement = function(elem, rows, rowHeaders) {
     return createElement(cell);
   };
 
-  var result = elem.clone();
   _.each(rows, function(row,idx) {
     var tr = $('<tr>');
     if(rowHeaders) tr.append(createHeaderElement(rowHeaders[idx]));
     _.each(row,function(cell) {
       tr.append(createElement(cell));
     });
-    result.append(tr);
+    elem.append(tr);
   });
-  return result;
+  return elem;
 };
+
+lmas.appendToyMemory = function(elem) {
+  var cells = util.partition(toy.memoryMap(),16);
+  lmas.table.appendToElement(elem,cells,toy.rowHeaders()); 
+};
+
 lmas.colors=["black","silver","gray","white","maroon","red","purple","fuchsia","green","lime","olive","yellow","navy","blue","teal","aqua"];
 
 lmas.machineView = function(machineType) {
@@ -86,7 +85,7 @@ lmas.initHandlers = function() {
   });
 
   $(".editor-load").click(function(){
-    var memory = lmas.toy.load($('#mem-cells'),lmas.editor.getValue());
+    var memory = toy.load($('#mem-cells'),lmas.editor.getValue());
     $('#mem-cells').replaceWith(memory);
   });
 
@@ -109,9 +108,8 @@ lmas.initEditor = function(editor) {
 };
 
 lmas.onReady = function() {
-  lmas.toy = new Toy();
-
   lmas.initHandlers();
+  lmas.appendToyMemory($('#mem-cells'));
 };
 
 function onReady() {
@@ -145,13 +143,13 @@ function onReady() {
   });
   $('#mem-header').append(registerLabels).append(registerValues);
 
-  _.each(_.range(16), function(rowNumber) {
-    var row = $('<tr>').append($('<th>').text(sprintf('%02X',rowNumber * 16)));
-    _.each(lmas.genColumns(16,"M" + sprintf('%X',rowNumber)), function(col) {
-      row.append(col.text("0000"));
-    });
-    $('#mem-cells').append(row);
-  });
+  //_.each(_.range(16), function(rowNumber) {
+  //  var row = $('<tr>').append($('<th>').text(sprintf('%02X',rowNumber * 16)));
+  //  _.each(lmas.genColumns(16,"M" + sprintf('%X',rowNumber)), function(col) {
+  //    row.append(col.text("0000"));
+  //  });
+  //  $('#mem-cells').append(row);
+  //});
 
   lmas.setPixel("44", lmas.packPixel(3,0,72));
   lmas.setPixel("45", lmas.packPixel(3,0,101));

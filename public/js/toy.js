@@ -1,18 +1,23 @@
-function Toy() {
-//  this.compile(text) {
-//    var src = text.split("\n");
-//    if(src[0].substr(0,3) === "#pc")
-//    _.each(src, function(inst,idx) {
-//      $('#M' + (idx +10)).text(inst);
-//    });
-//
-//  }
-  this.load = function(memory,text) {
-    var result = memory.clone();
-    _.each(text.trim().split("\n"), function(inst,idx) {
-      $(result).find('#M' + (idx + 10)).text(inst);
-    });
+'use strict';
 
-    return result;
-  }
+var toy = {};
+toy.memoryMap = function() {
+  return _.map(_.range(256),function(i) {
+    return {id: "M" + sprintf("%02X",i), text: '0000'};
+  });
+};
+
+toy.rowHeaders = function() {
+  return _.map(_.range(16),function(i) {
+    return {text: sprintf("%02X",i * 16), elem:'th'};
+  });
+};
+
+toy.load = function(memory,text) {
+  var result = memory.clone();
+  _.each(text.trim().split("\n"), function(inst,idx) {
+    $(result).find('#M' + (idx + 10)).text(inst);
+  });
+
+  return result;
 }
