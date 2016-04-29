@@ -20,11 +20,6 @@ lmas.showView = function(hash) {
   }
 };
 
-
-lmas.onReady = function() {
-  lmas.initHandlers();
-};
-
 lmas.packPixel = function(color, bgcolor, ascii) {
   return (color << 12) | (bgcolor << 8) | ascii;
 }
@@ -47,12 +42,22 @@ lmas.genColumns = function(length, idPrefix, classes) {
 }
 
 lmas.initHandlers = function() {
+  $(".machine-tab").click(function(){
+    $('.machine-tab').removeClass('active');   
+    $(this).addClass('active');   
+  });
+
   $(".editor-undo").click(function(){
     lmas.editor.undo();
   });
 
   $(".editor-redo").click(function(){
     lmas.editor.redo();
+  });
+
+  $(".editor-load").click(function(){
+    var memory = lmas.toy.load($('#mem-cells'),lmas.editor.getValue());
+    $('#mem-cells').replaceWith(memory);
   });
 
   $(window).on('beforeunload', function() {
@@ -65,17 +70,29 @@ lmas.initHandlers = function() {
   lmas.showView(window.location.hash);
 };
 
-lmas.initEditor = function() {
-  lmas.editor = CodeMirror.fromTextArea($('#text-editor')[0], {
+lmas.initEditor = function(editor) {
+  lmas.editor = editor;
+  var code = localStorage.getItem('code');
+  if(code !== null) {
+    lmas.editor.setValue(code);
+  }
+};
+
+lmas.onReady = function() {
+  lmas.toy = new Toy();
+
+  lmas.initHandlers();
+};
+
+function onReady() {
+  var editor = CodeMirror.fromTextArea($('#text-editor')[0], {
     theme:'cobalt',
     lineNumbers: true,
     styleActiveLine: true,
     matchBrackets: true
   });
-};
 
-function onReady() {
-  lmas.initEditor();
+  lmas.initEditor(editor);
   var screenLabels = $('<tr>').append($('<th>'));
   _.each(_.range(16), function(columnNumber) {
     screenLabels.append($('<th>').addClass('lead').text(sprintf('%X',columnNumber)));
@@ -112,22 +129,6 @@ function onReady() {
   lmas.setPixel("47", lmas.packPixel(3,0,108));
   lmas.setPixel("48", lmas.packPixel(3,0,111));
 
-  lmas.toy = new Toy();
-
-  var code = localStorage.getItem('code');
-  if(code !== null) {
-    lmas.editor.setValue(code);
-  }
-
-  $(".editor-load").click(function(){
-    var memory = lmas.toy.load($('#mem-cells'),lmas.editor.getValue());
-    $('#mem-cells').replaceWith(memory);
-  });
-
-  $(".machine-tab").click(function(){
-    $('.machine-tab').removeClass('active');   
-    $(this).addClass('active');   
-  });
 
   lmas.onReady();
 }
