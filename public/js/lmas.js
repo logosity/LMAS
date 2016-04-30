@@ -7,7 +7,7 @@ lmas.table.appendToElement = function(elem, rows, rowHeaders) {
   var createElement = function(cell) {
     var elemType = cell.elem ? cell.elem : 'td';
     var elem = $('<' + elemType + '>');
-    return elem.attr('id',cell.id).addClass(cell.klass).text(cell.text);
+    return elem.attr('id',cell.id).addClass(cell.klass).text(cell.value);
   };
   var createHeaderElement = function(cell) {
     if(cell.elem === undefined) cell.elem = 'th';
@@ -29,6 +29,17 @@ lmas.appendToyMemory = function(elem) {
   var cells = util.partition(toy.memoryMap(),16);
   lmas.table.appendToElement(elem,cells,toy.rowHeaders()); 
 };
+
+lmas.appendToyRegisters = function(elem) {
+  var cells = util.partition(toy.registers(),17);
+  lmas.table.appendToElement(elem,cells);
+}
+lmas.appendToyRegisterLabels = function(elem) {
+  var cells = _.map(toy.registers(), function(r) {
+    return {value: r.id, klass: "lead", elem: 'th' }; 
+  });
+  lmas.table.appendToElement(elem,util.partition(cells,17));
+}
 
 lmas.colors=["black","silver","gray","white","maroon","red","purple","fuchsia","green","lime","olive","yellow","navy","blue","teal","aqua"];
 
@@ -109,6 +120,8 @@ lmas.initEditor = function(editor) {
 
 lmas.onReady = function() {
   lmas.initHandlers();
+  lmas.appendToyRegisterLabels($('#mem-header'));
+  lmas.appendToyRegisters($('#mem-header'));
   lmas.appendToyMemory($('#mem-cells'));
 };
 
@@ -135,28 +148,11 @@ function onReady() {
     $('#screen-body').append(row);
   });
 
-  var registerLabels = $('<tr>').append($('<th>').addClass('lead').text('PC'));
-  var registerValues = $('<tr>').append($('<td>').text('00'));
-  _.each(_.range(16), function(columnNumber) {
-    registerLabels.append($('<th>').addClass('lead').text(sprintf('R%X',columnNumber)));
-    registerValues.append($('<td>').text('0000'));
-  });
-  $('#mem-header').append(registerLabels).append(registerValues);
-
-  //_.each(_.range(16), function(rowNumber) {
-  //  var row = $('<tr>').append($('<th>').text(sprintf('%02X',rowNumber * 16)));
-  //  _.each(lmas.genColumns(16,"M" + sprintf('%X',rowNumber)), function(col) {
-  //    row.append(col.text("0000"));
-  //  });
-  //  $('#mem-cells').append(row);
-  //});
-
   lmas.setPixel("44", lmas.packPixel(3,0,72));
   lmas.setPixel("45", lmas.packPixel(3,0,101));
   lmas.setPixel("46", lmas.packPixel(3,0,108));
   lmas.setPixel("47", lmas.packPixel(3,0,108));
   lmas.setPixel("48", lmas.packPixel(3,0,111));
-
 
   lmas.onReady();
 }

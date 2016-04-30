@@ -93,7 +93,7 @@ describe('LMAS', function() {
       expect($(result).find('td').length).toBe(3);
     });
     it('sets the text field for each cell', function() {
-      var cells = util.partition([{text:1},{text:2},{text:3},{text:4}],2);
+      var cells = util.partition([{value:1},{value:2},{value:3},{value:4}],2);
       var result = lmas.table.appendToElement($('<div>'),cells);
       expect($(result).find('td').text()).toBe('1234');
     });
@@ -118,7 +118,7 @@ describe('LMAS', function() {
     });
     it('treats first partition as row headers', function() {
       var cells = util.partition([{},{},{},{}],2);
-      var result = lmas.table.appendToElement($('<div>'),cells,[{text:'a'},{text:'b'}]);
+      var result = lmas.table.appendToElement($('<div>'),cells,[{value:'a'},{value:'b'}]);
       expect($(result).find('tr').length).toBe(2);
       expect($(result).find('tr:first').children().length).toBe(3);
       expect($(result).find('tr:first>th:first').text()).toEqual('a');
@@ -132,6 +132,23 @@ describe('LMAS', function() {
         expect($(elem).find('tr').length).toBe(16);
         expect($(elem).find('th').length).toBe(16);
         expect($(elem).find('td').length).toBe(256);
+      });
+
+      it('has a row for registers', function() {
+        var elem = $('<thead>');
+        lmas.appendToyRegisters(elem);
+        expect($(elem).find('tr').length).toBe(1);
+        expect($(elem).find('td').length).toBe(17);
+      });
+      it('has a row for register labels', function() {
+        var elem = $('<thead>');
+        lmas.appendToyRegisterLabels(elem);
+        expect($(elem).find('tr').length).toBe(1);
+        expect($(elem).find('th').length).toBe(17);
+        expect($(elem).find('th').hasClass("lead")).toBe(true);
+
+        var text = "PCR0R1R2R3R4R5R6R7R8R9RARBRCRDRERF";
+        expect($(elem).find('th').text()).toEqual(text);
       });
     });
   });

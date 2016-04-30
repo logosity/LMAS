@@ -1,15 +1,22 @@
 'use strict';
 
 var toy = {};
+toy.registers = function() {
+  var result = [{id:"PC",value:'00'}];
+  return result.concat(_.map(_.range(16),function(i) {
+    return {id:"R" + sprintf("%X",i), value:'0000'};
+  })); 
+};
+
 toy.memoryMap = function() {
   return _.map(_.range(256),function(i) {
-    return {id: "M" + sprintf("%02X",i), text: '0000'};
+    return {id: "M" + sprintf("%02X",i), value: '0000'};
   });
 };
 
 toy.rowHeaders = function() {
   return _.map(_.range(16),function(i) {
-    return {text: sprintf("%02X",i * 16), elem:'th'};
+    return {value: sprintf("%02X",i * 16), elem:'th'};
   });
 };
 

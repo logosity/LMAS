@@ -14,3 +14,8 @@ util.attrs = function(elems, attr) {
   });
 };
 
+util.get = function(coll, attr, val) {
+  return _.filter(coll, function(elem) {
+    return elem[attr] === val;
+  })[0];
+};

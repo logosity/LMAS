@@ -1,3 +1,5 @@
+'use strict';
+
 describe('TOY machine', function() {
   it('can load a program into memory at default location', function() {
     var program = ['1234','4567','89AB'];
@@ -28,7 +30,7 @@ describe('TOY machine', function() {
     });
 
     it('location contents are initialized to 0 (16 bit hex)', function() {
-      expect(_.filter(toy.memoryMap(), function(i) { return i.text === "0000";}).length).toEqual(256);
+      expect(_.filter(toy.memoryMap(), function(i) { return i.value === "0000";}).length).toEqual(256);
     });
 
     it('generates a row header for every 16th element', function() {
@@ -36,14 +38,36 @@ describe('TOY machine', function() {
     });
 
     it('row header contents are the memory location at the head of the row', function() {
-      expect(toy.rowHeaders()[0].text).toEqual("00");
-      expect(toy.rowHeaders()[1].text).toEqual("10");
-      expect(toy.rowHeaders()[10].text).toEqual("A0");
-      expect(toy.rowHeaders()[15].text).toEqual("F0");
+      expect(toy.rowHeaders()[0].value).toEqual("00");
+      expect(toy.rowHeaders()[1].value).toEqual("10");
+      expect(toy.rowHeaders()[10].value).toEqual("A0");
+      expect(toy.rowHeaders()[15].value).toEqual("F0");
     });
 
     it('row header elements are th', function() {
       expect(_.filter(toy.rowHeaders(), function(i) { return i.elem === "th";}).length).toEqual(16);
     });
+
+    it('has 17 registers', function() {
+      expect(toy.registers().length).toEqual(17);
+    });
+
+    it('register ids are their TOY names', function() {
+      expect(util.attrs(toy.registers(),'id')[0]).toEqual("PC");
+      expect(util.attrs(toy.registers(),'id')[1]).toEqual("R0");
+      expect(util.attrs(toy.registers(),'id')[16]).toEqual("RF");
+    });
+
+    it('registers are initialized to zero', function() {
+      var registers = toy.registers();
+      expect(util.get(registers,"id","PC").value).toEqual("00");
+      expect(util.get(registers,"id","R0").value).toEqual("0000");
+      expect(util.get(registers,"id","RF").value).toEqual("0000");
+    });
   });
+//  describe('screen', function() {
+//     it('contains 128 16 bit "pixels"', function() {
+//       expect(1).toEqual(0);
+//     });
+//  });
 });
