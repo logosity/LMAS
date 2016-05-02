@@ -60,25 +60,8 @@ lmas.showView = function(hash) {
   }
 };
 
-lmas.packPixel = function(color, bgcolor, ascii) {
-  return (color << 12) | (bgcolor << 8) | ascii;
-}
-
-lmas.setPixel = function(coords, val) {
-  var ascii = String.fromCharCode(0xFF & val);
-  var bgcolor = (0xF00 & val) >> 8;
-  var color = (0xF000 & val) >> 12;
-  $('#' + 'V' + coords).text(ascii).css("background-color",lmas.colors[bgcolor]).css("color",lmas.colors[color]); 
-}
-
 lmas.parseInstruction = function(code) {
   var matches = code.match(/^([0-9,A-F])([0-9,A-F])([0-9,A-F]{2})$/);
-}
-
-lmas.genColumns = function(length, idPrefix, classes) {
-  return _.map(_.range(length), function(columnNumber) {
-    return $('<td>').addClass(classes).attr("id", idPrefix + sprintf('%X',columnNumber));
-  });
 }
 
 lmas.initHandlers = function() {
@@ -119,13 +102,6 @@ lmas.initEditor = function(editor) {
 };
 
 lmas.onReady = function() {
-  lmas.initHandlers();
-  lmas.appendToyRegisterLabels($('#mem-header'));
-  lmas.appendToyRegisters($('#mem-header'));
-  lmas.appendToyMemory($('#mem-cells'));
-};
-
-function onReady() {
   var editor = CodeMirror($('#text-editor')[0], {
     theme:'cobalt',
     lineNumbers: true,
@@ -133,28 +109,17 @@ function onReady() {
     matchBrackets: true
   });
 
+  lmas.terminal = $('#screen').terminal(function(command, term) {
+    }, {
+      greetings: 'TOY Interface console',
+      name: 'toy_console',
+      height: 200,
+      prompt: '$ '
+  });
+
   lmas.initEditor(editor);
-  var screenLabels = $('<tr>').append($('<th>'));
-  _.each(_.range(16), function(columnNumber) {
-    screenLabels.append($('<th>').addClass('lead').text(sprintf('%X',columnNumber)));
-  });
-  $('#screen-header').append(screenLabels);
-
-  _.each(_.range(8), function(rowNumber) {
-    var row = $('<tr>').append($('<th>').text(sprintf('%X',rowNumber)));
-    _.each(lmas.genColumns(16,"V" + sprintf('%X',rowNumber), "pixel"), function(col) {
-      row.append(col.text(" "));
-    });
-    $('#screen-body').append(row);
-  });
-
-  lmas.setPixel("44", lmas.packPixel(3,0,72));
-  lmas.setPixel("45", lmas.packPixel(3,0,101));
-  lmas.setPixel("46", lmas.packPixel(3,0,108));
-  lmas.setPixel("47", lmas.packPixel(3,0,108));
-  lmas.setPixel("48", lmas.packPixel(3,0,111));
-
-  lmas.onReady();
-}
-
-
+  lmas.initHandlers();
+  lmas.appendToyRegisterLabels($('#mem-header'));
+  lmas.appendToyRegisters($('#mem-header'));
+  lmas.appendToyMemory($('#mem-cells'));
+};
