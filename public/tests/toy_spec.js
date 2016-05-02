@@ -16,7 +16,10 @@ describe('TOY machine', function() {
     expect($(result).find("#M12").text()).toEqual(program[2]);
     expect($(result).find("#M13").text()).toEqual('0000');
   });
+  it('can parse an opcode', function() {
+    expect(toy.parseInstruction('1249')).toEqual(['1','2','49']);
 
+  });
   describe('memory map',function() {
     it('contains 256, 16-bit memory objects', function() {
       expect(toy.memoryMap().length).toEqual(256);
@@ -65,9 +68,4 @@ describe('TOY machine', function() {
       expect(util.get(registers,"id","RF").value).toEqual("0000");
     });
   });
-//  describe('screen', function() {
-//     it('contains 128 16 bit "pixels"', function() {
-//       expect(1).toEqual(0);
-//     });
-//  });
 });

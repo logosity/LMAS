@@ -41,8 +41,6 @@ lmas.appendToyRegisterLabels = function(elem) {
   lmas.table.appendToElement(elem,util.partition(cells,17));
 }
 
-lmas.colors=["black","silver","gray","white","maroon","red","purple","fuchsia","green","lime","olive","yellow","navy","blue","teal","aqua"];
-
 lmas.machineView = function(machineType) {
   return $('<div class="machine-view">');
 };
@@ -59,10 +57,6 @@ lmas.showView = function(hash) {
     $('.view-container').empty().append(viewFn(hashParts[1]));
   }
 };
-
-lmas.parseInstruction = function(code) {
-  var matches = code.match(/^([0-9,A-F])([0-9,A-F])([0-9,A-F]{2})$/);
-}
 
 lmas.initHandlers = function() {
   $(".machine-tab").click(function(){

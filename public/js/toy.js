@@ -28,3 +28,9 @@ toy.load = function(memory,text) {
 
   return result;
 }
+
+toy.parseInstruction = function(code) {
+  var matches = code.match(/^([0-9,A-F])([0-9,A-F])([0-9,A-F]{2})$/);
+  return matches.slice(1);
+}
+
