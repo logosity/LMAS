@@ -1,3 +1,7 @@
+.templates {
+  display: none;
+}
+
 .CodeMirror {
   font-family: 'Inconsolata';
   font-size: 14pt;

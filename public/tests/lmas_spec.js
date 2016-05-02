@@ -1,7 +1,7 @@
 'use strict';
 
 describe('LMAS', function() {
-  it('shows the landing page view when there is no has', function() {
+  it('shows the landing page view when there is no hash', function() {
     lmas.showView('');
     expect($('.view-container .landing-view').length).toEqual(1);
   });
@@ -29,53 +29,69 @@ describe('LMAS', function() {
     expect($('#machine-toy').hasClass('active')).toBe(false);
   });
 
+  it('initializes everything when page is ready', function() {
+    spyOn(lmas,"initTerminal");
+    spyOn(lmas,"initEditor");
+    spyOn(lmas,"initHandlers");
+    spyOn(lmas,"appendToyRegisterLabels");
+    spyOn(lmas,"appendToyRegisters");
+    spyOn(lmas,"appendToyMemory");
+
+    lmas.onReady();
+    expect(lmas.initTerminal).toHaveBeenCalled();
+    expect(lmas.initEditor).toHaveBeenCalled();
+    expect(lmas.initHandlers).toHaveBeenCalled();
+    expect(lmas.appendToyRegisterLabels).toHaveBeenCalledWith($("#mem-header"));
+    expect(lmas.appendToyRegisters).toHaveBeenCalledWith($("#mem-header"));
+    expect(lmas.appendToyMemory).toHaveBeenCalledWith($("#mem-cells"));
+  });
+
   describe('editor panel', function() {
     var editor;
     beforeEach(function() {
-      editor = {
-        setValue: function() {},
-        getValue: function() {},
-        undo: function() {},
-        redo: function() {},
-
-      };
-      spyOn(editor, "setValue");
-      spyOn(editor, "getValue").and.returnValue("1234");
-      spyOn(editor, "undo");
-      spyOn(editor, "redo");
+//      editor = {
+//        setValue: function() {},
+//        getValue: function() {},
+//        undo: function() {},
+//        redo: function() {},
+//
+//      };
+      lmas.initEditor();
+      spyOn(lmas.editor, "setValue");
     });
     it('loads code from local storage into the editor when starting', function() {
       spyOn(localStorage,'getItem').and.returnValue("1234");
-      lmas.initEditor(editor);
+      lmas.restoreEditor(localStorage);
       expect(localStorage.getItem).toHaveBeenCalledWith("code");
       expect(lmas.editor.setValue).toHaveBeenCalledWith("1234");
     });
-    it('saves editor to local storage before the page unloads', function() {
-      lmas.initHandlers();
-      spyOn(localStorage,'setItem');
-      lmas.initEditor(editor);
-      $(window).trigger('beforeunload');
-      expect(localStorage.setItem).toHaveBeenCalledWith("code","1234");
-    });
-    it('calls undo on editor when button is clicked', function() {
-      lmas.initHandlers();
-      lmas.initEditor(editor);
-      $('.editor-undo').trigger('click');
-      expect(lmas.editor.undo).toHaveBeenCalled();
-    });
-    it('calls redo on editor when button is clicked', function() {
-      lmas.initHandlers();
-      lmas.initEditor(editor);
-      $('.editor-redo').trigger('click');
-      expect(lmas.editor.redo).toHaveBeenCalled();
-    });
-    it('loads the editor contents into machine memory', function() {
-      lmas.onReady();
-      lmas.initEditor(editor);
-      var cell = $('<tr>').append($('<td>').attr('id','M10').text("0000"));
-      $('#mem-cells').append(cell);
-      $('.editor-load').trigger('click');
-      expect($('#mem-cells').find('#M10').text()).toBe("1234");
+    describe('event handlers', function() {
+      beforeEach(function() {
+        lmas.initHandlers();
+        lmas.initEditor();
+        spyOn(lmas.editor, "getValue").and.returnValue("4111");
+        spyOn(lmas.editor, "undo");
+        spyOn(lmas.editor, "redo");
+      });
+      it('saves editor to local storage before the page unloads', function() {
+        spyOn(localStorage,'setItem');
+        $(window).trigger('beforeunload');
+        expect(localStorage.setItem).toHaveBeenCalledWith("code","4111");
+      });
+      it('calls undo on editor when button is clicked', function() {
+        $('.editor-undo').trigger('click');
+        expect(lmas.editor.undo).toHaveBeenCalled();
+      });
+      it('calls redo on editor when button is clicked', function() {
+        $('.editor-redo').trigger('click');
+        expect(lmas.editor.redo).toHaveBeenCalled();
+      });
+      it('loads the editor contents into machine memory', function() {
+        var cell = $('<tr>').append($('<td>').attr('id','M10').text("0000"));
+        $('#mem-cells').append(cell);
+        $('.editor-load').trigger('click');
+        expect($('#mem-cells').find('#M10').text()).toBe("4111");
+      });
     });
   });
 

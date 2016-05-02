@@ -2,6 +2,23 @@
 
 var lmas = {};
 
+lmas.machineView = function(machineType) {
+  return $('<div class="machine-view">');
+};
+
+lmas.showView = function(hash) {
+  var routes = {
+    '#machine': lmas.machineView
+  };
+
+  var hashParts = hash.split("-");
+
+  var viewFn = routes[hashParts[0]];
+  if (viewFn) {
+    $('.view-container').empty().append(viewFn(hashParts[1]));
+  }
+};
+
 lmas.table = {};
 lmas.table.appendToElement = function(elem, rows, rowHeaders) {
   var createElement = function(cell) {
@@ -41,23 +58,6 @@ lmas.appendToyRegisterLabels = function(elem) {
   lmas.table.appendToElement(elem,util.partition(cells,17));
 }
 
-lmas.machineView = function(machineType) {
-  return $('<div class="machine-view">');
-};
-
-lmas.showView = function(hash) {
-  var routes = {
-    '#machine': lmas.machineView
-  };
-
-  var hashParts = hash.split("-");
-
-  var viewFn = routes[hashParts[0]];
-  if (viewFn) {
-    $('.view-container').empty().append(viewFn(hashParts[1]));
-  }
-};
-
 lmas.initHandlers = function() {
   $(".machine-tab").click(function(){
     $('.machine-tab').removeClass('active');   
@@ -87,22 +87,17 @@ lmas.initHandlers = function() {
   lmas.showView(window.location.hash);
 };
 
-lmas.initEditor = function(editor) {
-  lmas.editor = editor;
-  var code = localStorage.getItem('code');
-  if(code !== null) {
-    lmas.editor.setValue(code);
-  }
-};
-
-lmas.onReady = function() {
+lmas.initEditor = function() {
   var editor = CodeMirror($('#text-editor')[0], {
     theme:'cobalt',
     lineNumbers: true,
     styleActiveLine: true,
     matchBrackets: true
   });
+  lmas.editor = editor;
+};
 
+lmas.initTerminal = function() {
   lmas.terminal = $('#screen').terminal(function(command, term) {
     }, {
       greetings: 'TOY Interface console',
@@ -110,8 +105,18 @@ lmas.onReady = function() {
       height: 200,
       prompt: '$ '
   });
+};
 
-  lmas.initEditor(editor);
+lmas.restoreEditor = function(storage) {
+  var code = storage.getItem('code');
+  if(code !== null) {
+    lmas.editor.setValue(code);
+  }
+};
+
+lmas.onReady = function() {
+  lmas.initTerminal();
+  lmas.initEditor();
   lmas.initHandlers();
   lmas.appendToyRegisterLabels($('#mem-header'));
   lmas.appendToyRegisters($('#mem-header'));
