@@ -13,23 +13,18 @@
   vertical-align: bottom;
 }
 
-#screen, #memory {
+.screen, .memory {
   vertical-align: middle;
   font-family: 'Inconsolata';
   font-size: 11pt;
 }
 
-#screen th {
-  text-align: center;
-}
-
-#mem-header {
+.mem-header {
   text-align: left;
   border: solid;
 }
 
-#mem-body td {
+.mem-body td {
   text-align: left;
 }
-
 
