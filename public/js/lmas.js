@@ -67,8 +67,8 @@ lmas.appendToyMemory = function(elem) {
   var rowHeaders = _.map(_.range(16),function(i) {
     return {value: sprintf("%02X",i * 16), elem:'th'};
   });
-  var cells = _.map(toy.memoryMap(),function(c) {
-    return {id: sprintf("M%02X",c.name), value: '0000'};
+  var cells = _.map(toy.coreDump().ram,function(val,idx) {
+    return {id: sprintf("M%02X",idx), value: sprintf('%04X',val)};
   });
   
   lmas.table.appendToElement(elem,util.partition(cells,16),rowHeaders); 
@@ -76,9 +76,10 @@ lmas.appendToyMemory = function(elem) {
 
 
 lmas.appendToyRegisters = function(elem) {
-  var pc = {id: _.first(toy.registers()).name, value:'00'};
-  var rest = _.map(_.rest(toy.registers()), function(r) {
-    return {id: r.name, value:'0000'};
+  var dump = toy.coreDump();
+  var pc = {id: "PC", value: sprintf('%02X',dump.pc)};
+  var rest = _.map(dump.registers, function(val,idx) {
+    return {id: "R" + sprintf('%X',idx), value: sprintf('%04X',val)};
   });
 
   var cells = util.partition([pc].concat(rest),17);
@@ -86,10 +87,11 @@ lmas.appendToyRegisters = function(elem) {
 };
 
 lmas.appendToyRegisterLabels = function(elem) {
-  var cells = _.map(toy.registers(), function(r) {
-    return {value: r.name, klass: "lead", elem: 'th' }; 
+  var pc = [{value:"PC", klass: "lead", elem: 'th'}];
+  var cells = _.map(_.range(16), function(i) {
+    return {value: "R" + sprintf('%X',i), klass: "lead", elem: 'th' }; 
   });
-  lmas.table.appendToElement(elem,util.partition(cells,17));
+  lmas.table.appendToElement(elem,util.partition(pc.concat(cells),17));
 }
 
 lmas.initHandlers = function() {

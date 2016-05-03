@@ -131,7 +131,7 @@ describe('LMAS', function() {
           expect($('.view-container .machine-view thead').find('th').hasClass("lead")).toBe(true);
           expect($('.view-container .machine-view thead').find('tr').length).toBe(2);
           expect($('.view-container .machine-view thead').find('td').length).toBe(17);
-          expect($('.view-container .machine-view #PC').text()).toEqual('00');
+          expect($('.view-container .machine-view #PC').text()).toEqual('10');
           expect($('.view-container .machine-view #R0').text()).toEqual('0000');
           expect($('.view-container .machine-view #RF').text()).toEqual('0000');
 

@@ -1,17 +1,24 @@
 'use strict';
 
-var toy = {};
-toy.registers = function() {
-  var result = [{name:"PC"}];
-  return result.concat(_.map(_.range(16),function(i) {
-    return {name: sprintf('R%X',i)};
-  })); 
-};
+var toy = function() {
+  var pc = new Uint8Array(1);
+  pc[0] = 0x10;
+  var registers = new Int16Array(16);
+  var ram = new Int16Array(256);
 
-toy.memoryMap = function() {
-  return _.map(_.range(256),function(i) {
-    return {name:i};
-  });
+  return {
+    pc: function() { return pc[0]; },
+    registers: function() { return registers; },
+    ram: function() { return ram; }
+  };
+}(); 
+
+toy.coreDump = function() {
+  return {
+    pc: toy.pc(),
+    registers: toy.registers(),
+    ram: toy.ram()
+  };
 };
 
 toy.load = function(memory,text) {

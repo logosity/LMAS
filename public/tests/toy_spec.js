@@ -21,25 +21,14 @@ describe('TOY machine', function() {
 
   });
   describe('memory map',function() {
-    it('contains 256 objects', function() {
-      expect(toy.memoryMap().length).toEqual(256);
-    });
-    it('memory addresses are sequential and numeric', function() {
-      expect(toy.memoryMap()[0].name).toEqual(0);
-      expect(toy.memoryMap()[25].name).toEqual(25);
-      expect(toy.memoryMap()[44].name).toEqual(44);
-      expect(toy.memoryMap()[128].name).toEqual(128);
-      expect(toy.memoryMap()[255].name).toEqual(255);
-    });
-
-    it('has 17 registers', function() {
-      expect(toy.registers().length).toEqual(17);
-    });
-
-    it('register names are by position', function() {
-      expect(util.attrs(toy.registers(),'name')[0]).toEqual("PC");
-      expect(util.attrs(toy.registers(),'name')[1]).toEqual("R0");
-      expect(util.attrs(toy.registers(),'name')[16]).toEqual("RF");
+    it('can be accessed via core dump', function() {
+      var core = toy.coreDump();
+      var isZero = function(num) { return num === 0; };
+      expect(core.pc).toEqual(0x10);
+      expect(core.registers.length).toEqual(16);
+      expect(_.every(core.registers, isZero)).toBe(true);
+      expect(core.ram.length).toEqual(256);
+      expect(_.every(core.ram, isZero)).toBe(true);
     });
   });
 });
