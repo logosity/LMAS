@@ -2,21 +2,15 @@
 
 var toy = {};
 toy.registers = function() {
-  var result = [{id:"PC",value:'00'}];
+  var result = [{name:"PC"}];
   return result.concat(_.map(_.range(16),function(i) {
-    return {id:"R" + sprintf("%X",i), value:'0000'};
+    return {name: sprintf('R%X',i)};
   })); 
 };
 
 toy.memoryMap = function() {
   return _.map(_.range(256),function(i) {
-    return {id: "M" + sprintf("%02X",i), value: '0000'};
-  });
-};
-
-toy.rowHeaders = function() {
-  return _.map(_.range(16),function(i) {
-    return {value: sprintf("%02X",i * 16), elem:'th'};
+    return {name:i};
   });
 };
 

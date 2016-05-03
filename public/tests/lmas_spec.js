@@ -115,21 +115,41 @@ describe('LMAS', function() {
       });
 
       describe('memory table',function() {
-        it('generates a table of the proper dimensions', function() {
+        beforeEach(function() {
           lmas.showView('#machine-toy');
+        });
+        it('generates a table of the proper dimensions', function() {
           expect($('.view-container .machine-view tbody').find('tr').length).toBe(16);
           expect($('.view-container .machine-view tbody').find('th').length).toBe(16);
           expect($('.view-container .machine-view tbody').find('td').length).toBe(256);
+          expect($('.view-container .machine-view tbody #M00').text()).toEqual('0000');
+          expect($('.view-container .machine-view tbody #M01').text()).toEqual('0000');
+          expect($('.view-container .machine-view tbody #MFF').text()).toEqual('0000');
         });
         it('has row for registers and their labels', function() {
-          lmas.showView('#machine-toy');
           expect($('.view-container .machine-view thead').find('th').length).toBe(17);
           expect($('.view-container .machine-view thead').find('th').hasClass("lead")).toBe(true);
           expect($('.view-container .machine-view thead').find('tr').length).toBe(2);
           expect($('.view-container .machine-view thead').find('td').length).toBe(17);
+          expect($('.view-container .machine-view #PC').text()).toEqual('00');
+          expect($('.view-container .machine-view #R0').text()).toEqual('0000');
+          expect($('.view-container .machine-view #RF').text()).toEqual('0000');
 
           var text = "PCR0R1R2R3R4R5R6R7R8R9RARBRCRDRERF";
           expect($('.view-container .machine-view thead').find('th').text()).toEqual(text);
+        });
+
+        it('row header contents are the memory location at the head of the row', function() {
+          var text = "00102030405060708090A0B0C0D0E0F0"
+          expect($('.view-container .mem-cells th').text()).toEqual(text);
+        });
+
+        it('row header elements are th', function() {
+          expect($('.view-container .mem-cells th').length).toEqual(16);
+          $('.view-container .mem-cells tr').each(function() {
+            var rowHeader = $(this).find(':first-child');
+            expect(rowHeader.get(0).tagName).toEqual("TH");
+          });
         });
       });
 

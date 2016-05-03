@@ -64,18 +64,30 @@ lmas.table.appendToElement = function(elem, rows, rowHeaders) {
 };
 
 lmas.appendToyMemory = function(elem) {
-  var cells = util.partition(toy.memoryMap(),16);
-  lmas.table.appendToElement(elem,cells,toy.rowHeaders()); 
+  var rowHeaders = _.map(_.range(16),function(i) {
+    return {value: sprintf("%02X",i * 16), elem:'th'};
+  });
+  var cells = _.map(toy.memoryMap(),function(c) {
+    return {id: sprintf("M%02X",c.name), value: '0000'};
+  });
+  
+  lmas.table.appendToElement(elem,util.partition(cells,16),rowHeaders); 
 };
 
+
 lmas.appendToyRegisters = function(elem) {
-  var cells = util.partition(toy.registers(),17);
+  var pc = {id: _.first(toy.registers()).name, value:'00'};
+  var rest = _.map(_.rest(toy.registers()), function(r) {
+    return {id: r.name, value:'0000'};
+  });
+
+  var cells = util.partition([pc].concat(rest),17);
   lmas.table.appendToElement(elem, cells);
 };
 
 lmas.appendToyRegisterLabels = function(elem) {
   var cells = _.map(toy.registers(), function(r) {
-    return {value: r.id, klass: "lead", elem: 'th' }; 
+    return {value: r.name, klass: "lead", elem: 'th' }; 
   });
   lmas.table.appendToElement(elem,util.partition(cells,17));
 }
