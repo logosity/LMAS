@@ -2,12 +2,21 @@
 
 var lmas = {};
 
+lmas.events = {
+  toy: { 
+    memoryChange: function(address,value) {
+      $('#M' + sprintf('%02X',address)).text(sprintf('%04X',value));
+    }
+  }
+};
+
 lmas.landingView = function(unused, targetElement) {
   $('#home-tab').addClass('active');   
   targetElement.append($('.templates .landing-view').clone());
 };
 
 lmas.machineView = function(machineType, targetElement) {
+  lmas.toy = new Toy(lmas.events.toy);
   $('#' + machineType + '-tab').addClass('active');   
   var view = $('.templates .machine-view').clone();
   var editor = lmas.createEditor(view.find('.text-editor'));
@@ -15,7 +24,7 @@ lmas.machineView = function(machineType, targetElement) {
   lmas.initViewHandlers(machineType,view,editor);
 
   lmas.restoreEditor(machineType,editor);
-
+  lmas.restoreState(machineType);
   lmas.appendToyRegisterLabels($(view).find('.mem-header'));
   lmas.appendToyRegisters($(view).find('.mem-header'));
   lmas.appendToyMemory($(view).find('.mem-cells'));
@@ -67,7 +76,8 @@ lmas.appendToyMemory = function(elem) {
   var rowHeaders = _.map(_.range(16),function(i) {
     return {value: sprintf("%02X",i * 16), elem:'th'};
   });
-  var cells = _.map(toy.coreDump().ram,function(val,idx) {
+  var ram = toy.util.ram(lmas.toy.dump());
+  var cells = _.map(ram,function(val,idx) {
     return {id: sprintf("M%02X",idx), value: sprintf('%04X',val)};
   });
   
@@ -76,13 +86,15 @@ lmas.appendToyMemory = function(elem) {
 
 
 lmas.appendToyRegisters = function(elem) {
-  var dump = toy.coreDump();
-  var pc = {id: "PC", value: sprintf('%02X',dump.pc)};
-  var rest = _.map(dump.registers, function(val,idx) {
-    return {id: "R" + sprintf('%X',idx), value: sprintf('%04X',val)};
+  var dump = lmas.toy.dump();
+  var pc = toy.util.getPcIn(dump);
+  var registers = toy.util.registers(dump);
+  var pcElem = {id: "PC", value: sprintf('%02X',pc)};
+  var rest = _.map(registers, function(val,idx) {
+    return {id: "R" + sprintf('%X',idx), value: sprintf('%04s',val)};
   });
 
-  var cells = util.partition([pc].concat(rest),17);
+  var cells = util.partition([pcElem].concat(rest),17);
   lmas.table.appendToElement(elem, cells);
 };
 
@@ -121,12 +133,17 @@ lmas.initViewHandlers = function(storageKey, elem, editor) {
   });
 
   elem.find('.editor-load').click(function(){
-    var memory = toy.load(elem.find('.mem-cells'), editor.getValue());
-    elem.find('.mem-cells').replaceWith(memory);
+    lmas.toy.load(toyAsm.assemble(editor.getValue()));
   });
 
   $(window).on('beforeunload', function() {
-    localStorage.setItem(storageKey + '-code', editor.getValue());
+    var sourceCode = editor.getValue();
+    if(sourceCode && sourceCode.length > 0 && sourceCode !== "undefined") {
+      localStorage.setItem(storageKey + '-code', sourceCode);
+    }
+    if(lmas.toy) {
+      localStorage.setItem(storageKey + '-state', toyAsm.serialize(lmas.toy.dump()));
+    }
   });
 };
 
@@ -150,8 +167,13 @@ lmas.initTerminal = function() {
 };
 
 lmas.restoreEditor = function(storageKey, editor) {
-  var viewState = localStorage.getItem(storageKey + "-code");
-  editor.setValue(viewState);
+  var code = localStorage.getItem(storageKey + "-code");
+  editor.setValue(code);
+};
+
+lmas.restoreState = function(storageKey) {
+  var machineState = localStorage.getItem(storageKey + "-state");
+  lmas.toy.load(toyAsm.deserialize(machineState));
 };
 
 lmas.onReady = function() {

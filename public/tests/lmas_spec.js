@@ -153,6 +153,18 @@ describe('LMAS', function() {
         });
       });
 
+      describe('machine state event handlers',function() {
+        beforeEach(function() {
+          lmas.showView('#machine-toy');
+        });
+        it('updates a memory address', function() {
+          lmas.events.toy.memoryChange(0xc0,0x1234);
+          expect($('#MC0').text()).toEqual('1234');
+
+          lmas.events.toy.memoryChange(0xc0,0xcf24);
+          expect($('#MC0').text()).toEqual('CF24');
+        });
+      });
       describe('editor setup', function() {
         var editor;
         beforeEach(function() {
@@ -164,7 +176,6 @@ describe('LMAS', function() {
             refresh: function() {}
           };
           spyOn(lmas,'createEditor').and.returnValue(editor);
-          spyOn(editor, 'getValue').and.returnValue('4111');
           spyOn(editor, 'setValue');
           spyOn(editor, 'undo');
           spyOn(editor, 'redo');
@@ -183,13 +194,14 @@ describe('LMAS', function() {
           expect(localStorage.getItem).toHaveBeenCalledWith("toy-code");
           expect(editor.setValue).toHaveBeenCalledWith("1234");
         });
+        it('loads machine state from local storage', function() {
+          var state = '00010010' + "1010".repeat(272);
+          spyOn(localStorage,'getItem').and.returnValue(state);
+          lmas.showView('#machine-toy');
+          expect(toyAsm.serialize(lmas.toy.dump())).toEqual(state);
+        });
 
         describe('event handlers', function() {
-          it('saves editor to local storage before the page unloads', function() {
-            spyOn(localStorage,'setItem');
-            $(window).trigger('beforeunload');
-            expect(localStorage.setItem).toHaveBeenCalledWith("toy-code","4111");
-          });
           it('calls undo on editor when button is clicked', function() {
             $('.editor-undo').trigger('click');
             expect(editor.undo).toHaveBeenCalled();
@@ -199,6 +211,7 @@ describe('LMAS', function() {
             expect(editor.redo).toHaveBeenCalled();
           });
           it('loads the editor contents into machine memory', function() {
+            spyOn(editor, 'getValue').and.returnValue('4111');
             $('.editor-load').trigger('click');
             expect($('.mem-cells').find('#M10').text()).toBe("4111");
           });
