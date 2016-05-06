@@ -1,17 +1,28 @@
 'use strict';
 
 describe('TOY machine', function() {
-  var _toy;
+  var toyObj;
   beforeEach(function() {
-    _toy = new Toy();
+    toyObj = new Toy();
   });
   it('can parse an opcode', function() {
-    expect(_toy.parseInstruction('1249')).toEqual(['1','2','49']);
+    expect(toyObj.parseInstruction('1249')).toEqual(['1','2','49']);
 
   });
-  describe('memory map',function() {
+  describe('reset', function() {
+     it('sets the state of the machine to default', function() {
+      var defaultState = toyObj.dump();
+      var code = Uint16Array.from([0,0x20,0x1234,0x45ff,0x3455]);
+      toyObj.load(code);
+      expect(toyObj.dump()).not.toEqual(defaultState);
+      toyObj.reset();
+      expect(toyObj.dump()).toEqual(defaultState);
+      
+     });
+  });
+  describe('dump',function() {
     it('can be dumped to bytes', function() {
-      var bytes = _toy.dump();
+      var bytes = toyObj.dump();
       expect(bytes.length).toEqual(274);
       expect(bytes[0]).toEqual(1);
       expect(bytes[1]).toEqual(0x10);
@@ -19,7 +30,8 @@ describe('TOY machine', function() {
         expect(b).toEqual(0);
       });
     });
-
+  });
+  describe('load',function() {
     it('can load a byte dump', function() {
       var bytes = new Uint16Array(274);
       bytes[0] = 1;
@@ -28,9 +40,9 @@ describe('TOY machine', function() {
       toy.util.setRamIn(bytes, 0x14, 0x1234);
       toy.util.setRamIn(bytes, 0xFF, 0xFF00);
 
-      _toy.load(bytes);
+      toyObj.load(bytes);
       
-      var dump = _toy.dump();
+      var dump = toyObj.dump();
       expect(toy.util.getPcIn(dump)).toEqual(0x20);
       expect(toy.util.getRegisterIn(dump,1)).toEqual(0x4f56);
       expect(toy.util.getRamIn(dump,0x14)).toEqual(0x1234);
@@ -42,33 +54,67 @@ describe('TOY machine', function() {
       bytes.set([0,0x20],0);
       bytes.set([0x1234,0x45ff,0x3455],2);
 
-      _toy.load(bytes);
+      toyObj.load(bytes);
 
-      var dump = _toy.dump();
+      var dump = toyObj.dump();
       expect(toy.util.getPcIn(dump)).toEqual(0x20);
       expect(toy.util.getRamIn(dump,0x20)).toEqual(0x1234);
       expect(toy.util.getRamIn(dump,0x21)).toEqual(0x45ff);
       expect(toy.util.getRamIn(dump,0x22)).toEqual(0x3455);
     });
     it('will only load an array of type Uint16Array', function() {
-      expect(function() {_toy.load("foobarbaz");}).toThrow({name:"invalid", message: "invalid binary format for loading"});
-      expect(function() {_toy.load("foo\nbar\nbaz");}).toThrow({name:"invalid", message: "invalid binary format for loading"});
-      expect(function() {_toy.load([1,2,3]);}).toThrow({name:"invalid", message: "invalid binary format for loading"});
-      expect(function() {_toy.load(Uint8Array.from([1,2,3]));}).toThrow({name:"invalid", message: "invalid binary format for loading"});
+      expect(function() {toyObj.load("foobarbaz");}).toThrow({name:"invalid", message: "invalid binary format for loading"});
+      expect(function() {toyObj.load("foo\nbar\nbaz");}).toThrow({name:"invalid", message: "invalid binary format for loading"});
+      expect(function() {toyObj.load([1,2,3]);}).toThrow({name:"invalid", message: "invalid binary format for loading"});
+      expect(function() {toyObj.load(Uint8Array.from([1,2,3]));}).toThrow({name:"invalid", message: "invalid binary format for loading"});
     });
     describe('raising change events', function() {
       var handlers;
       beforeEach(function() {
         handlers = {
-          memoryChange: function() {}
+          memoryChange: function() {},
+          registryChange: function() {},
+          pcChange: function() {}
         };
 
         spyOn(handlers,'memoryChange');
-        _toy = new Toy(handlers);
+        spyOn(handlers,'registryChange');
+        spyOn(handlers,'pcChange');
+        toyObj = new Toy(handlers);
       });
-      it('a memory event is trigged by load', function() {
-        _toy.load(Uint16Array.from([0, 0x20,0x1234]));
-        expect(handlers.memoryChange).toHaveBeenCalledWith(0x20,0x1234);
+      describe('a program load', function() {
+        it('triggers a memory event for each opcode', function() {
+          toyObj.load(Uint16Array.from([0, 0x20,0x1234]));
+          expect(handlers.memoryChange).toHaveBeenCalledWith(0x20,0x1234);
+        });  
+      });
+      describe('a full core load', function() {
+        it('triggers a memory event for each address in RAM', function() {
+          var bytes = new Uint16Array(274);
+          bytes[0] = 1;
+          bytes[1] = 0x10;
+          toyObj.load(Uint16Array.from(bytes));
+          _.each(_.range(256), function(i) {
+            expect(handlers.memoryChange).toHaveBeenCalledWith(i,0);
+          });
+        });
+        it('triggers a register event for every register', function() {
+          var bytes = new Uint16Array(274);
+          bytes[0] = 1;
+          bytes[1] = 0x10;
+          bytes.set([0,1,2,3,4,5,6,7,8,9,0xA,0xB,0xC,0xD,0xE,0xF],2);
+          toyObj.load(Uint16Array.from(bytes));
+          _.each(_.range(0xF), function(i) {
+            expect(handlers.registryChange).toHaveBeenCalledWith(i,i);
+          });
+        });
+        it('triggers a pc event for the program counter', function() {
+          var bytes = new Uint16Array(274);
+          bytes[0] = 1;
+          bytes[1] = 0x10;
+          toyObj.load(Uint16Array.from(bytes));
+          expect(handlers.pcChange).toHaveBeenCalledWith(0x10);
+        });
       });  
     });
   });

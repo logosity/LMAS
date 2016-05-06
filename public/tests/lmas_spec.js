@@ -2,11 +2,9 @@
 
 describe('LMAS', function() {
   it('initializes everything when page is ready', function() {
-    spyOn(lmas,"initTerminal");
     spyOn(lmas,"initHandlers");
 
     lmas.onReady();
-    expect(lmas.initTerminal).toHaveBeenCalled();
     expect(lmas.initHandlers).toHaveBeenCalled();
   });
 
@@ -114,6 +112,11 @@ describe('LMAS', function() {
         expect($('.view-container .machine-view .text-editor .CodeMirror').length).toEqual(1);
       });
 
+      it('creates a terminal and appends it to the document', function() {
+        lmas.showView('#machine-toy');
+        expect($('.view-container .machine-view .screen.terminal').length).toEqual(1);
+      });
+
       describe('memory table',function() {
         beforeEach(function() {
           lmas.showView('#machine-toy');
@@ -122,18 +125,12 @@ describe('LMAS', function() {
           expect($('.view-container .machine-view tbody').find('tr').length).toBe(16);
           expect($('.view-container .machine-view tbody').find('th').length).toBe(16);
           expect($('.view-container .machine-view tbody').find('td').length).toBe(256);
-          expect($('.view-container .machine-view tbody #M00').text()).toEqual('0000');
-          expect($('.view-container .machine-view tbody #M01').text()).toEqual('0000');
-          expect($('.view-container .machine-view tbody #MFF').text()).toEqual('0000');
         });
         it('has row for registers and their labels', function() {
           expect($('.view-container .machine-view thead').find('th').length).toBe(17);
           expect($('.view-container .machine-view thead').find('th').hasClass("lead")).toBe(true);
           expect($('.view-container .machine-view thead').find('tr').length).toBe(2);
           expect($('.view-container .machine-view thead').find('td').length).toBe(17);
-          expect($('.view-container .machine-view #PC').text()).toEqual('10');
-          expect($('.view-container .machine-view #R0').text()).toEqual('0000');
-          expect($('.view-container .machine-view #RF').text()).toEqual('0000');
 
           var text = "PCR0R1R2R3R4R5R6R7R8R9RARBRCRDRERF";
           expect($('.view-container .machine-view thead').find('th').text()).toEqual(text);
@@ -188,19 +185,6 @@ describe('LMAS', function() {
           lmas.showView('#machine-toy');
           expect(editor.refresh).toHaveBeenCalled();
         });
-        it('loads code from local storage into the editor when starting', function() {
-          spyOn(localStorage,'getItem').and.returnValue("1234");
-          lmas.showView('#machine-toy');
-          expect(localStorage.getItem).toHaveBeenCalledWith("toy-code");
-          expect(editor.setValue).toHaveBeenCalledWith("1234");
-        });
-        it('loads machine state from local storage', function() {
-          var state = '00010010' + "1010".repeat(272);
-          spyOn(localStorage,'getItem').and.returnValue(state);
-          lmas.showView('#machine-toy');
-          expect(toyAsm.serialize(lmas.toy.dump())).toEqual(state);
-        });
-
         describe('event handlers', function() {
           it('calls undo on editor when button is clicked', function() {
             $('.editor-undo').trigger('click');
