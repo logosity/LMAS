@@ -182,7 +182,7 @@ lmas.initTerminal = function(machineType, elem) {
 
 lmas.restoreEditor = function(storageKey, editor) {
   var code = localStorage.getItem(storageKey + "-code");
-  editor.setValue(code);
+  if(code != null) editor.setValue(code);
 };
 
 lmas.restoreState = function(storageKey) {
