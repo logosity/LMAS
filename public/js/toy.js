@@ -71,8 +71,8 @@ function Toy(handlers) {
     ram[addr] = value;
   };
   var setRegister = function(addr, value) {
-    if(handlers && handlers.registryChange) {
-      handlers.registryChange(addr,value);
+    if(handlers && handlers.registerChange) {
+      handlers.registerChange(addr,value);
     }
     registers[addr] = value;
   };
@@ -82,6 +82,7 @@ function Toy(handlers) {
 
   that.reset = function() {
     var bytes = new Uint16Array(274);
+    bytes[0] = 1;
     bytes[1] = 0x10;
     that.load(bytes);
   };

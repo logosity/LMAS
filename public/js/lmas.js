@@ -7,7 +7,7 @@ lmas.events = {
     memoryChange: function(address,value) {
       $('#M' + sprintf('%02X',address)).text(sprintf('%04X',value));
     },
-    registryChange: function(address,value) {
+    registerChange: function(address,value) {
       $('#R' + sprintf('%X',address)).text(sprintf('%04X',value));
     },
     pcChange: function(value) {
@@ -30,13 +30,12 @@ lmas.machineView = function(machineType, targetElement) {
   
   lmas.initViewHandlers(machineType,view,lmas.editor);
 
-  lmas.restoreEditor(machineType,lmas.editor);
   lmas.appendToyRegisterLabels($(view).find('.mem-header'));
   lmas.appendToyRegisters($(view).find('.mem-header'));
   lmas.appendToyMemory($(view).find('.mem-cells'));
   targetElement.append(view);
   lmas.editor.refresh();
-  lmas.restoreState(machineType);
+  lmas.toy.reset();
 };
 
 lmas.showView = function(hash) {
@@ -142,16 +141,6 @@ lmas.initViewHandlers = function(storageKey, elem, editor) {
   elem.find('.editor-load').click(function(){
     lmas.toy.load(toyAsm.assemble(editor.getValue()));
   });
-
-  $(window).on('beforeunload', function() {
-    var sourceCode = editor.getValue();
-    if(sourceCode && sourceCode.length > 0 && sourceCode !== "undefined") {
-      localStorage.setItem(storageKey + '-code', sourceCode);
-    }
-    if(lmas.toy) {
-      localStorage.setItem(storageKey + '-state', toyAsm.serialize(lmas.toy.dump()));
-    }
-  });
 };
 
 lmas.createEditor = function(elem) {
@@ -178,20 +167,6 @@ lmas.initTerminal = function(machineType, elem) {
       height: 200,
       prompt: machineType +'$ '
   });
-};
-
-lmas.restoreEditor = function(storageKey, editor) {
-  var code = localStorage.getItem(storageKey + "-code");
-  if(code != null) editor.setValue(code);
-};
-
-lmas.restoreState = function(storageKey) {
-  var machineState = localStorage.getItem(storageKey + "-state");
-  if(machineState != null) {
-    lmas.toy.load(toyAsm.deserialize(machineState));
-  } else {
-    lmas.toy.reset();
-  }
 };
 
 lmas.onReady = function() {

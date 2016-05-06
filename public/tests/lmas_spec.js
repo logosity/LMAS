@@ -185,6 +185,12 @@ describe('LMAS', function() {
           lmas.showView('#machine-toy');
           expect(editor.refresh).toHaveBeenCalled();
         });
+        xit('resets the machine', function() {
+          spyOn(lmas.toy,"reset");
+          lmas.showView('#machine-toy');
+          expect(lmas.toy.reset).toHaveBeenCalled();
+        });
+
         describe('event handlers', function() {
           it('calls undo on editor when button is clicked', function() {
             $('.editor-undo').trigger('click');

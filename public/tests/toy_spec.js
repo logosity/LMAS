@@ -12,10 +12,14 @@ describe('TOY machine', function() {
   describe('reset', function() {
      it('sets the state of the machine to default', function() {
       var defaultState = toyObj.dump();
-      var code = Uint16Array.from([0,0x20,0x1234,0x45ff,0x3455]);
-      toyObj.load(code);
+      var newState = Uint16Array.from(defaultState);
+      toy.util.setPcIn(newState, 0x20);
+      toy.util.setRegisterIn(newState,1, 0xFFCC);
+      toy.util.setRamIn(newState,0xC0,0x1F1C);
+      toyObj.load(newState);
       expect(toyObj.dump()).not.toEqual(defaultState);
       toyObj.reset();
+
       expect(toyObj.dump()).toEqual(defaultState);
       
      });
@@ -73,12 +77,12 @@ describe('TOY machine', function() {
       beforeEach(function() {
         handlers = {
           memoryChange: function() {},
-          registryChange: function() {},
+          registerChange: function() {},
           pcChange: function() {}
         };
 
         spyOn(handlers,'memoryChange');
-        spyOn(handlers,'registryChange');
+        spyOn(handlers,'registerChange');
         spyOn(handlers,'pcChange');
         toyObj = new Toy(handlers);
       });
@@ -105,7 +109,7 @@ describe('TOY machine', function() {
           bytes.set([0,1,2,3,4,5,6,7,8,9,0xA,0xB,0xC,0xD,0xE,0xF],2);
           toyObj.load(Uint16Array.from(bytes));
           _.each(_.range(0xF), function(i) {
-            expect(handlers.registryChange).toHaveBeenCalledWith(i,i);
+            expect(handlers.registerChange).toHaveBeenCalledWith(i,i);
           });
         });
         it('triggers a pc event for the program counter', function() {
