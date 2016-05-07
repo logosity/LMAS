@@ -1,6 +1,10 @@
 'use strict';
 
+
 describe('LMAS', function() {
+  beforeEach(function() {
+    spyOn(lmas,"animateCell");
+  });
   it('initializes everything when page is ready', function() {
     spyOn(lmas,"initHandlers");
 
@@ -151,15 +155,21 @@ describe('LMAS', function() {
       });
 
       describe('machine state event handlers',function() {
-        beforeEach(function() {
-          lmas.showView('#machine-toy');
-        });
         it('updates a memory address', function() {
+          lmas.showView('#machine-toy');
           lmas.events.toy.memoryChange(0xc0,0x1234);
           expect($('#MC0').text()).toEqual('1234');
 
           lmas.events.toy.memoryChange(0xc0,0xcf24);
           expect($('#MC0').text()).toEqual('CF24');
+        });
+        it('animates changes to memory', function() {
+          lmas.events.toy.memoryChange(0xc0,0xcf24);
+          expect(lmas.animateCell).toHaveBeenCalledWith('#MC0');
+        });
+        it('animates changes to registers', function() {
+          lmas.events.toy.registerChange(1,0xcf24);
+          expect(lmas.animateCell).toHaveBeenCalledWith('#R1');
         });
       });
       describe('editor setup', function() {

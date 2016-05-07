@@ -2,13 +2,26 @@
 
 var lmas = {};
 
+lmas.animateCell = function(id) {
+  var elem = $(id);
+  elem.css("background-color",'#ff0000');
+  elem.animate({ backgroundColor: "#ffffff"},{
+    duration: 2000,
+    easing: "swing",
+  });
+}
+
 lmas.events = {
   toy: { 
     memoryChange: function(address,value) {
-      $('#M' + sprintf('%02X',address)).text(sprintf('%04X',value));
+      var id = '#M' + sprintf('%02X',address);
+      lmas.animateCell(id);
+      $(id).text(sprintf('%04X',value));
     },
     registerChange: function(address,value) {
-      $('#R' + sprintf('%X',address)).text(sprintf('%04X',value));
+      var id = '#R' + sprintf('%X',address);
+      lmas.animateCell(id);
+      $(id).text(sprintf('%04X',value));
     },
     pcChange: function(value) {
       $('#PC').text(sprintf('%02X',value));

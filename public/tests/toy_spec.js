@@ -98,9 +98,10 @@ describe('TOY machine', function() {
           bytes[0] = 1;
           bytes[1] = 0x10;
           toyObj.load(Uint16Array.from(bytes));
-          _.each(_.range(256), function(i) {
-            expect(handlers.memoryChange).toHaveBeenCalledWith(i,0);
-          });
+          expect(handlers.memoryChange).toHaveBeenCalledWith(0,0);
+          expect(handlers.memoryChange).toHaveBeenCalledWith(0x10,0);
+          expect(handlers.memoryChange).toHaveBeenCalledWith(0xC0,0);
+          expect(handlers.memoryChange).toHaveBeenCalledWith(0xFF,0);
         });
         it('triggers a register event for every register', function() {
           var bytes = new Uint16Array(274);
@@ -108,9 +109,10 @@ describe('TOY machine', function() {
           bytes[1] = 0x10;
           bytes.set([0,1,2,3,4,5,6,7,8,9,0xA,0xB,0xC,0xD,0xE,0xF],2);
           toyObj.load(Uint16Array.from(bytes));
-          _.each(_.range(0xF), function(i) {
-            expect(handlers.registerChange).toHaveBeenCalledWith(i,i);
-          });
+          expect(handlers.registerChange).toHaveBeenCalledWith(0,0);
+          expect(handlers.registerChange).toHaveBeenCalledWith(1,0);
+          expect(handlers.registerChange).toHaveBeenCalledWith(0xC,0);
+          expect(handlers.registerChange).toHaveBeenCalledWith(0xF,0);
         });
         it('triggers a pc event for the program counter', function() {
           var bytes = new Uint16Array(274);
