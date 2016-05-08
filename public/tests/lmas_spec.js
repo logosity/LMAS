@@ -1,6 +1,5 @@
 'use strict';
 
-
 describe('LMAS', function() {
   beforeEach(function() {
     spyOn(lmas,"animateCell");
