@@ -95,8 +95,7 @@ lmas.appendToyMemory = function(elem) {
   var rowHeaders = _.map(_.range(16),function(i) {
     return {value: sprintf("%02X",i * 16), elem:'th'};
   });
-  var ram = toy.util.ram(lmas.toy.dump());
-  var cells = _.map(ram,function(val,idx) {
+  var cells = _.map(lmas.toy.dump().ram(),function(val,idx) {
     return {id: sprintf("M%02X",idx)};
   });
   
@@ -105,15 +104,11 @@ lmas.appendToyMemory = function(elem) {
 
 
 lmas.appendToyRegisters = function(elem) {
-  var dump = lmas.toy.dump();
-  var pc = toy.util.getPcIn(dump);
-  var registers = toy.util.registers(dump);
-  var pcElem = {id: "PC"};
-  var rest = _.map(registers, function(val,idx) {
+  var registers = _.map(lmas.toy.dump().registers(), function(val,idx) {
     return {id: "R" + sprintf('%X',idx)};
   });
 
-  var cells = util.partition([pcElem].concat(rest),17);
+  var cells = util.partition([{id: "PC"}].concat(registers),17);
   lmas.table.appendToElement(elem, cells);
 };
 

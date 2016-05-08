@@ -4,6 +4,7 @@ describe('LMAS', function() {
   beforeEach(function() {
     spyOn(lmas,"animateCell");
   });
+
   it('initializes everything when page is ready', function() {
     spyOn(lmas,"initHandlers");
 
@@ -77,12 +78,7 @@ describe('LMAS', function() {
       $('.machine-tab').removeClass("active");
       lmas.showView('#machine-toy');
       expect($('#toy-tab').hasClass('active')).toBe(true);
-
-//      $('.machine-tab').removeClass("active");
-//      lmas.showView('#machine-lmc');
-//      expect($('#lmc-tab').hasClass('active')).toBe(true);
     });
-
     it('changes the view when tab is click', function() {
       lmas.initHandlers();
       $('#home-tab').trigger('click');
@@ -90,7 +86,6 @@ describe('LMAS', function() {
       $('#toy-tab').trigger('click');
       expect($('.view-container .machine-view').length).toEqual(1);
     });
-
     it('subscribes to the hash change event', function() {
       lmas.initHandlers();
       spyOn(lmas,'showView');
@@ -104,17 +99,14 @@ describe('LMAS', function() {
         lmas.showView('#machine-toy');
         expect(lmas.machineView).toHaveBeenCalledWith('toy',$('.view-container').empty());
       });
-
       it('retrieves the proper template and appends it to the document adding the live class to the element', function() {
         lmas.showView('#machine-toy');
         expect($('.view-container .machine-view').length).toEqual(1);
       });
-
       it('creates an editor and appends it to the document', function() {
         lmas.showView('#machine-toy');
         expect($('.view-container .machine-view .text-editor .CodeMirror').length).toEqual(1);
       });
-
       it('creates a terminal and appends it to the document', function() {
         lmas.showView('#machine-toy');
         expect($('.view-container .machine-view .screen.terminal').length).toEqual(1);
@@ -138,12 +130,10 @@ describe('LMAS', function() {
           var text = "PCR0R1R2R3R4R5R6R7R8R9RARBRCRDRERF";
           expect($('.view-container .machine-view thead').find('th').text()).toEqual(text);
         });
-
         it('row header contents are the memory location at the head of the row', function() {
           var text = "00102030405060708090A0B0C0D0E0F0"
           expect($('.view-container .mem-cells th').text()).toEqual(text);
         });
-
         it('row header elements are th', function() {
           expect($('.view-container .mem-cells th').length).toEqual(16);
           $('.view-container .mem-cells tr').each(function() {

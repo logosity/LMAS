@@ -1,12 +1,6 @@
 'use strict';
 
 var toy = {};
-
-toy.offset = {};
-
-toy.offset.PC = 1;
-toy.offset.REG = 2;
-toy.offset.RAM = 18;
 function Toy(handlers) {
   var that = this;
   var pc = new Uint8Array(1);
@@ -32,11 +26,8 @@ function Toy(handlers) {
     registers[addr] = value;
   };
 
-  
-  that.pc = function() { return pc[0]; },
-
   that.reset = function() {
-    var bytes = new Uint16Array(274);
+    var bytes = toy.util.create();
     bytes[0] = 1;
     bytes[1] = 0x10;
     that.load(bytes);
@@ -46,29 +37,29 @@ function Toy(handlers) {
     if(!(bytes instanceof Uint16Array)) {
       throw {name: "invalid", message: "invalid binary format for loading"};
     }
-    setPc(toy.util.getPcIn(bytes));
+    toy.util.decorate(bytes);
+    setPc(bytes.pc());
 
-    if(bytes[0] === 1) {
-      _.each(toy.util.registers(bytes), function(opcode,idx) {
+    if(bytes.header() === 1) {
+      _.each(bytes.registers(), function(opcode,idx) {
         setRegister(idx,opcode);
       });
-      _.each(toy.util.ram(bytes), function(opcode,idx) {
+      _.each(bytes.ram(), function(opcode,idx) {
         setRam(idx,opcode);
       });
-      ram = Uint16Array.from(toy.util.ram(bytes));
     } else {
       _.each(bytes.slice(2), function(opcode,idx) {
-        setRam(that.pc() + idx,opcode);
+        setRam(bytes.pc() + idx,opcode);
       });
     }
   };
 
   that.dump = function() {
-      var result = new Uint16Array(274);
-      result[0] = 1;
-      result.set(pc, toy.offset.PC);
-      result.set(registers, toy.offset.REG);
-      result.set(ram, toy.offset.RAM);
+      var result = toy.util.create();
+      result.header(1);
+      result.pc(pc[0]);
+      result.registers(registers);
+      result.ram(ram);
       return result;
   };
 
