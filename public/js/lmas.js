@@ -13,12 +13,12 @@ lmas.animateCell = function(id) {
 
 lmas.events = {
   toy: { 
-    memoryChange: function(address,value) {
+    memoryChange: function(value,address) {
       var id = '#M' + sprintf('%02X',address);
       lmas.animateCell(id);
       $(id).text(sprintf('%04X',value));
     },
-    registerChange: function(address,value) {
+    registerChange: function(value,address) {
       var id = '#R' + sprintf('%X',address);
       lmas.animateCell(id);
       $(id).text(sprintf('%04X',value));
@@ -35,7 +35,7 @@ lmas.landingView = function(unused, targetElement) {
 };
 
 lmas.machineView = function(machineType, targetElement) {
-  lmas.toy = new Toy(lmas.events.toy);
+  lmas.toy = toy.create(lmas.events.toy);
   $('#' + machineType + '-tab').addClass('active');   
   var view = $('.templates .machine-view').clone();
   lmas.editor = lmas.createEditor(view.find('.text-editor'));
@@ -162,7 +162,9 @@ lmas.createEditor = function(elem) {
 
 lmas.initTerminal = function(machineType, elem) {
   return elem.terminal(function(command, term) {
-    if(command === 'reset') {
+    if(command === 'run') {
+      lmas.toy.run();
+    } else if(command === 'reset') {
       lmas.toy.reset();
     } else if(command === 'load') {
       lmas.toy.load(toyAsm.assemble(lmas.editor.getValue()));
