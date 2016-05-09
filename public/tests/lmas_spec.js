@@ -65,26 +65,15 @@ describe('LMAS', function() {
       lmas.showView('');
       expect($('.view-container .landing-view').length).toEqual(1);
     });
-    it('shows the landing page view after another view is selected', function() {
-      lmas.showView('#machine-toy');
-      lmas.showView('');
-      expect($('.view-container .landing-view').length).toEqual(1);
-    });
     it('changes the active tab when navigating to a view', function() {
       $('.machine-tab').removeClass("active");
       lmas.showView('');
       expect($('#home-tab').hasClass('active')).toBe(true);
-
-      $('.machine-tab').removeClass("active");
-      lmas.showView('#machine-toy');
-      expect($('#toy-tab').hasClass('active')).toBe(true);
     });
     it('changes the view when tab is click', function() {
       lmas.initHandlers();
       $('#home-tab').trigger('click');
       expect($('.view-container .landing-view').length).toEqual(1);
-      $('#toy-tab').trigger('click');
-      expect($('.view-container .machine-view').length).toEqual(1);
     });
     it('subscribes to the hash change event', function() {
       lmas.initHandlers();
@@ -99,19 +88,12 @@ describe('LMAS', function() {
         lmas.showView('#machine-toy');
         expect(lmas.machineView).toHaveBeenCalledWith('toy',$('.view-container').empty());
       });
-      it('retrieves the proper template and appends it to the document adding the live class to the element', function() {
+      it('template, editor & terminal added', function() {
         lmas.showView('#machine-toy');
         expect($('.view-container .machine-view').length).toEqual(1);
-      });
-      it('creates an editor and appends it to the document', function() {
-        lmas.showView('#machine-toy');
         expect($('.view-container .machine-view .text-editor .CodeMirror').length).toEqual(1);
-      });
-      it('creates a terminal and appends it to the document', function() {
-        lmas.showView('#machine-toy');
         expect($('.view-container .machine-view .screen.terminal').length).toEqual(1);
       });
-
       describe('memory table',function() {
         beforeEach(function() {
           lmas.showView('#machine-toy');

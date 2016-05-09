@@ -23,6 +23,21 @@ function resetFixture() {
   }
 }
 
+//var lmastest = {};
+//lmastest.startTime = 0;
+//lmastest.lastSpec = null;
+//
+//lmastest.execute = jasmine.Spec.prototype.execute;
+//jasmine.Spec.prototype.execute = function (...args) {
+//  lmastest.lastSpec = this.result
+//  lmastest.execute.apply(this, args)
+//};
+
 beforeEach(function() {
   resetFixture();
+//  lmastest.startTime = Date.now();
+});
+
+afterEach(function() {
+//  console.log((Date.now() - lmastest.startTime) + " - " + lmastest.lastSpec.description);
 });
