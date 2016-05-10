@@ -43,13 +43,37 @@ describe('TOY machine', function() {
       var dump = toyObj.dump();
       expect(dump.pc()).toEqual(0x15);
     });
-    it('raises an event at the end of a step', function() {
-      var handlers = { stepEnd: function() {} };
-      spyOn(handlers,"stepEnd");
+    it('raises an event at the start of a step', function() {
+      var handlers = { stepStart: function() {} };
+      spyOn(handlers,"stepStart");
       var toyObj = toy.create(handlers);
       toyObj.load(Uint16Array.from([0,0x10,0x1234]));
       toyObj.step();
-      expect(handlers.stepEnd).toHaveBeenCalledWith(0x11);
+      expect(handlers.stepStart).toHaveBeenCalledWith({pc: 0x10,instruction:toy.cycle.parse(0x1234)});
+    });
+    it('raises an event at the end of a step', function() {
+      var handlers = { stepEnd: function() {} };
+      spyOn(handlers,"stepEnd");
+      var map = toy.util.create(handlers);
+      spyOn(toy.util,"create").and.returnValue(map);
+      var toyObj = toy.create(handlers);
+      toyObj.load(Uint16Array.from([0,0x10,0x1234]));
+      toyObj.step();
+      expect(handlers.stepEnd).toHaveBeenCalledWith({pc: 0x11,state: {pc: map.pc, registers: map.registers, ram: map.ram}, instruction:toy.cycle.parse(0x1234)});
+    });
+    it('raises an event on reset', function() {
+      var handlers = { reset: function() {} };
+      spyOn(handlers,"reset");
+      var toyObj = toy.create(handlers);
+      toyObj.reset();
+      expect(handlers.reset).toHaveBeenCalledWith({pc:0x10});
+    });
+    it('raises an event on load', function() {
+      var handlers = { load: function() {} };
+      spyOn(handlers,"load");
+      var toyObj = toy.create(handlers);
+      toyObj.load(toy.util.create());
+      expect(handlers.load).toHaveBeenCalledWith({pc:0x10});
     });
   });
 
@@ -164,41 +188,39 @@ describe('TOY machine', function() {
         });
         it('changes to pc', function() {
           bytes.pc(0x20);
-          expect(handlers.pcChange).toHaveBeenCalledWith(0x20,undefined);
+          expect(handlers.pcChange).toHaveBeenCalledWith({pc: 0x20});
         });  
         it('pc changes are 8-bit', function() {
           bytes.pc(0x100);
-          expect(handlers.pcChange).toHaveBeenCalledWith(0x00,undefined);
+          expect(handlers.pcChange).toHaveBeenCalledWith({pc: 0x00});
         });
         it('changes to single registers', function() {
           bytes.registers(1,0);
           bytes.registers(0xC,0x42);
-          expect(handlers.registerChange).toHaveBeenCalledWith(0,1);
-          expect(handlers.registerChange).toHaveBeenCalledWith(0x42,0xC);
+          expect(handlers.registerChange).toHaveBeenCalledWith({address:1, value: 0});
+          expect(handlers.registerChange).toHaveBeenCalledWith({address:0xC, value: 0x42});
         });
         it('changes to all registers', function() {
           bytes.registers([0x10000,1,2,3,4,5,6,7,8,9,0xa,0xb,0xc,0xd,0xe,0xf]);
           _.each(_.range(16), function(register) {
-            expect(handlers.registerChange).toHaveBeenCalledWith(register,register);
+            expect(handlers.registerChange).toHaveBeenCalledWith({address: register,value: register});
           });
         });
         it('register changes are 16-bit', function() {
           bytes.registers(2,0x10000);
-          expect(handlers.registerChange).toHaveBeenCalledWith(0x00,2);
+          expect(handlers.registerChange).toHaveBeenCalledWith({address: 2, value: 0x00});
         });
         it('changes to ram', function() {
-          bytes.ram(0,0x42);
           bytes.ram(0x10,0xFF);
-          expect(handlers.memoryChange).toHaveBeenCalledWith(0x42,0);
-          expect(handlers.memoryChange).toHaveBeenCalledWith(0xFF,0x10);
+          expect(handlers.memoryChange).toHaveBeenCalledWith({address:0x10, value: 0xFF});
         });
         it('ram changes are 16-bit', function() {
           bytes.ram(2,0x10000);
-          expect(handlers.memoryChange).toHaveBeenCalledWith(0x00,2);
+          expect(handlers.memoryChange).toHaveBeenCalledWith({address: 2, value: 0});
         });
         describe('turning handlers on and off', function() {
           it('disable all handlers', function() {
-            bytes.disableHandlers();
+            bytes.disableCallbacks();
             bytes.pc(0x10);
             bytes.registers(0,0x42);
             bytes.ram(0,0x42);
@@ -207,8 +229,8 @@ describe('TOY machine', function() {
             expect(handlers.memoryChange).not.toHaveBeenCalled();
           });  
           it('enable all handlers', function() {
-            bytes.disableHandlers();
-            bytes.enableHandlers();
+            bytes.disableCallbacks();
+            bytes.enableCallbacks();
             bytes.pc(0x10);
             bytes.registers(0,0x42);
             bytes.ram(0,0x42);
@@ -314,33 +336,33 @@ describe('TOY machine', function() {
   });
   describe('instruction cycle', function() {
     it('can parse an instruction', function() {
-      expect(toy.cycle.parse(0x124C)).toEqual([1,2,0x4c]);
+      expect(toy.cycle.parse(0x124C)).toEqual({opcode: 1, d: 2, s:4, t: 0xc, addr: 0x4c});
 
     });
     it('can fetch instructions', function() {
       var map = toy.util.create();
       map.pc(0x10);
-      map.ram(map.pc(),0x12ff);
-      expect(toy.cycle.fetch(map.pc, map.ram)).toEqual([1,2,0xFF]);
+      map.ram(map.pc(),0x12fe);
+      expect(toy.cycle.fetch(map.pc, map.ram)).toEqual({opcode:1,d:2,addr:0xfe,s:0xf,t:0xe});
     });  
     describe('TOY instruction set', function() {
       var map;
       var callInterpret = function(instruction) {
-        return toy.cycle.interpret(instruction)(map.pc,map.registers,map.ram);
+        return toy.cycle.interpret(toy.cycle.parse(instruction))(map.pc,map.registers,map.ram);
       };
       beforeEach(function() {
         map = toy.util.create(); 
         map.pc(0x11);
       });
       it('halt', function() {
-        expect(callInterpret([0,0x0,0x00])).toBe(false);
-        expect(callInterpret([0,0x1,0xC0])).toBe(false);
-        expect(callInterpret([0,0xF,0xFF])).toBe(false);
+        expect(callInterpret(0)).toBe(false);
+        expect(callInterpret(0x01c0)).toBe(false);
+        expect(callInterpret(0x0fff)).toBe(false);
       });
       it('add', function() {
         map.registers(3,0x41);
         map.registers(4,1);
-        expect(callInterpret([1,2,0x34])).toBe(true);
+        expect(callInterpret(0x1234)).toBe(true);
         expect(map.registers(2)).toEqual(0x42);
         expect(map.registers(3)).toEqual(0x41);
         expect(map.registers(4)).toEqual(1);
@@ -348,7 +370,7 @@ describe('TOY machine', function() {
       it('subtract', function() {
         map.registers(3,0x43);
         map.registers(4,1);
-        expect(callInterpret([2,2,0x34])).toBe(true);
+        expect(callInterpret(0x2234)).toBe(true);
         expect(map.registers(2)).toEqual(0x42);
         expect(map.registers(3)).toEqual(0x43);
         expect(map.registers(4)).toEqual(0x01);
@@ -356,7 +378,7 @@ describe('TOY machine', function() {
       it('and', function() {
         map.registers(3,0xFF00);
         map.registers(4,0x0F00);
-        expect(callInterpret([0x3,2,0x34])).toBe(true);
+        expect(callInterpret(0x3234)).toBe(true);
         expect(map.registers(2)).toEqual(0x0f00);
         expect(map.registers(3)).toEqual(0xff00);
         expect(map.registers(4)).toEqual(0x0f00);
@@ -364,7 +386,7 @@ describe('TOY machine', function() {
       it('xor', function() {
         map.registers(3,0xFF0F);
         map.registers(4,0x0F00);
-        expect(callInterpret([0x4,2,0x34])).toBe(true);
+        expect(callInterpret(0x4234)).toBe(true);
         expect(map.registers(2)).toEqual(0xf00f);
         expect(map.registers(3)).toEqual(0xff0f);
         expect(map.registers(4)).toEqual(0x0f00);
@@ -372,7 +394,7 @@ describe('TOY machine', function() {
       it('left shift', function() {
         map.registers(3,0xFF0F);
         map.registers(4,4);
-        expect(callInterpret([0x5,2,0x34])).toBe(true);
+        expect(callInterpret(0x5234)).toBe(true);
         expect(map.registers(2)).toEqual(0xf0f0);
         expect(map.registers(3)).toEqual(0xff0f);
         expect(map.registers(4)).toEqual(4);
@@ -380,71 +402,71 @@ describe('TOY machine', function() {
       it('right shift', function() {
         map.registers(3,0xFF0F);
         map.registers(4,4);
-        expect(callInterpret([0x6,2,0x34])).toBe(true);
+        expect(callInterpret(0x6234)).toBe(true);
         expect(map.registers(2)).toEqual(0x0ff0);
         expect(map.registers(3)).toEqual(0xff0f);
         expect(map.registers(4)).toEqual(4);
       });
       it('load address', function() {
-        expect(callInterpret([7,3,0x34])).toBe(true);
+        expect(callInterpret(0x7334)).toBe(true);
         expect(map.registers(3)).toEqual(0x34);
       });
       it('load', function() {
         map.ram(0x34,0x42);
-        expect(callInterpret([8,3,0x34])).toBe(true);
+        expect(callInterpret(0x8334)).toBe(true);
         expect(map.registers(3)).toEqual(0x42);
       });
       it('store', function() {
         map.registers(3,0x42);
-        expect(callInterpret([9,3,0x34])).toBe(true);
+        expect(callInterpret(0x9334)).toBe(true);
         expect(map.ram(0x34)).toEqual(0x42);
       });
       it('load indirect', function() {
         map.ram(0x34,0x42);
         map.registers(4,0x34);
-        expect(callInterpret([0xA,3,0x04])).toBe(true);
+        expect(callInterpret(0xA304)).toBe(true);
         expect(map.registers(3)).toEqual(0x42);
       });
       it('store indirect', function() {
         map.registers(3,0x42);
         map.registers(4,0x34);
-        expect(callInterpret([0xB,3,0x04])).toBe(true);
+        expect(callInterpret(0xB304)).toBe(true);
         expect(map.ram(0x34)).toEqual(0x42);
       });
       it('branch zero (true)', function() {
         map.pc(0x11);
         map.registers(3,0);
-        expect(callInterpret([0xC,3,0x34])).toBe(true);
+        expect(callInterpret(0xC334)).toBe(true);
         expect(map.pc()).toEqual(0x34);
       });
       it('branch zero (false)', function() {
         map.pc(0x11);
         map.registers(3,1);
-        expect(callInterpret([0xC,3,0x34])).toBe(true);
+        expect(callInterpret(0xC334)).toBe(true);
         expect(map.pc()).toEqual(0x11);
       });
       it('branch positive (true)', function() {
         map.pc(0x11);
         map.registers(3,1);
-        expect(callInterpret([0xD,3,0x34])).toBe(true);
+        expect(callInterpret(0xD334)).toBe(true);
         expect(map.pc()).toEqual(0x34);
       });
       it('branch positive (false)', function() {
         map.pc(0x11);
         map.registers(3,0);
-        expect(callInterpret([0xD,3,0x34])).toBe(true);
+        expect(callInterpret(0xD334)).toBe(true);
         expect(map.pc()).toEqual(0x11);
       });
       it('jump register', function() {
         map.pc(0x11);
         map.registers(3,0x34);
-        expect(callInterpret([0xE,3,0x00])).toBe(true);
+        expect(callInterpret(0xE300)).toBe(true);
         expect(map.pc()).toEqual(0x34);
       });
       it('jump and link', function() {
         map.pc(0x11);
         map.registers(3,0x00);
-        expect(callInterpret([0xF,3,0x34])).toBe(true);
+        expect(callInterpret(0xF334)).toBe(true);
         expect(map.registers(3)).toEqual(0x11);
         expect(map.pc()).toEqual(0x34);
       });

@@ -2,36 +2,120 @@
 
 var lmas = {};
 
-lmas.animateCell = function(id,settings) {
-  var config = _.extend({color: '#ff0000',duration:2000},settings);
+lmas.animation = {};
+lmas.animation.duration = 2000;
+lmas.animation.stateChange = function(id,settings) {
+  var config = _.extend({
+    bgcolor: '#ff0000',
+    color:'#000000',
+    duration: lmas.animation.duration,
+    queue: false,
+    persist: false
+  },settings);
   var elem = $(id);
-  elem.css("background-color",config.color);
-  elem.animate({ backgroundColor: "#ffffff"},{
+  elem.css("background-color",config.bgcolor);
+  elem.css("color",config.color);
+  elem.animate({ backgroundColor: "#ffffff",color: "#000000"},{
     duration: config.duration,
     easing: "swing",
-    queue: false,
+    queue: config.queue,
+    complete: function() {
+      if(config.persist) {
+        elem.css("background-color",config.bgcolor);
+        elem.css("color",config.color);
+      }
+    }
   });
 }
-
+lmas.ui = {};
+lmas.ui.regId = function(register) {
+  return '#R' + sprintf('%X',register);
+};
+lmas.ui.memId = function(address) {
+  return '#M' + sprintf('%02X', address);
+};
+lmas.ui.hex8 = function(value) {
+  return sprintf('%02X',value);
+};
+lmas.ui.hex16 = function(value) {
+  return sprintf('%04X',value);
+};
 lmas.events = {
   toy: { 
-    memoryChange: function(value,address) {
-      var id = '#M' + sprintf('%02X',address);
-      lmas.animateCell(id);
-      $(id).text(sprintf('%04X',value));
+    memoryChange: function(eventData) {
+      var id = lmas.ui.memId(eventData.address);
+      lmas.animation.stateChange(id);
+      $(id).text(lmas.ui.hex16(eventData.value));
     },
-    registerChange: function(value,address) {
-      var id = '#R' + sprintf('%X',address);
-      lmas.animateCell(id);
-      $(id).text(sprintf('%04X',value));
+    registerChange: function(eventData) {
+      var id = lmas.ui.regId(eventData.address);
+      lmas.animation.stateChange(id);
+      $(id).text(lmas.ui.hex16(eventData.value));
     },
-    pcChange: function(value) {
-      lmas.animateCell('#PC',{color:'#08b9ee'});
-      $('#PC').text(sprintf('%02X',value));
+    pcChange: function(eventData) {
+      lmas.animation.stateChange('#PC',{bgcolor:'#08b9ee'});
+      $('#PC').text(lmas.ui.hex8(eventData.pc));
     },
-    stepEnd: function(address) {
-      var id = '#M' + sprintf('%02X',address);
-      lmas.animateCell(id,{color:'#08b9ee'});
+    load: function(eventData) {
+      lmas.animation.stateChange('#PC',{bgcolor:'#08b9ee',queue:true,persist:true});
+      lmas.animation.stateChange(lmas.ui.memId(eventData.pc),{bgcolor:'#08b9ee',queue:true,persist:true});
+    },
+    stepStart: function(eventData) {
+      $(lmas.ui.memId(eventData.pc)).css('background-color','#FFFFFF');
+      lmas.animation.stateChange({bgcolor:'#08b9ee',queue:true,persist:true});
+    },
+    stepEnd: function(eventData) {
+      var config = {bgcolor: "#ffffff", color:'#ffc145'};
+      var type1 = function(settings) {
+        var sConfig = _.clone(config);
+        var tConfig = _.clone(config);
+
+        if(settings.d === settings.s) sConfig.bgcolor = "#ff0000";
+        if(settings.d === settings.t) tConfig.bgcolor = "#ff0000";
+
+        lmas.animation.stateChange(lmas.ui.regId(settings.s), sConfig);
+        lmas.animation.stateChange(lmas.ui.regId(settings.t), tConfig);
+      };
+      var branch = function(settings) {
+        lmas.animation.stateChange(lmas.ui.regId(settings.d), config);
+      };
+
+      var animations = {
+        0x1: type1, 
+        0x2: type1,
+        0x3: type1,
+        0x4: type1,
+        0x5: type1,
+        0x6: type1,
+        0x7: undefined, //no animation
+        0x8: function(settings) { lmas.animation.stateChange(lmas.ui.memId(settings.addr), config); },
+        0x9: function(settings) { lmas.animation.stateChange(lmas.ui.regId(settings.d), config); },
+        0xA: function(settings) {
+          lmas.animation.stateChange(lmas.ui.regId(settings.t), config);
+          lmas.animation.stateChange(lmas.ui.memId(eventData.state.registers(settings.t)), config);
+        },
+        0xB: function(settings) {
+          lmas.animation.stateChange(lmas.ui.regId(settings.d), config);
+          lmas.animation.stateChange(lmas.ui.regId(settings.t), config);
+        },
+        0xC: branch,
+        0xD: branch,
+        0xE: branch,
+        0xF: function(settings) {
+          lmas.animation.stateChange('#PC', config);
+          lmas.animation.stateChange(lmas.ui.regId(settings.d), config);
+        },
+      };
+      var id = lmas.ui.memId(eventData.pc);
+      lmas.animation.stateChange(id,{bgcolor:'#08b9ee'});
+      if(eventData.instruction) {
+        var inst = eventData.instruction;
+        lmas.lastOperation = inst.opcode;
+        if(animations[inst.opcode]) animations[inst.opcode](inst);
+      }
+    },
+    reset: function(eventData) {
+      lmas.lastOperation = undefined;
     }
   }
 };
@@ -168,51 +252,53 @@ lmas.createEditor = function(elem) {
 };
 
 lmas.initTerminal = function(machineType, elem) {
-  return elem.terminal(function(command, term) {
-    if(command === 'run') {
-      lmas.toy.run();
-      lmas.toy.load(lmas.toy.dump());
-    } else if(command === 'halt') {
-        window.clearInterval(lmas.activeInterval);
-    } else if(command === 'step') {
-      lmas.toy.step();
-    } else if(command === 'jog') {
+  return elem.terminal({
+    run: function() { 
+      lmas.toy.run(); 
+      lmas.toy.load(lmas.toy.dump()); 
+    },
+    halt: function() { window.clearInterval(lmas.activeInterval); },
+    step: function() { lmas.toy.step(); },
+    set: function(duration) { 
+      lmas.animation.duration = duration; },
+    jog: function() {
+      var term = this;
       lmas.activeInterval = setInterval(function() {
-        term.exec("step",true)
-      },1000);
-    } else if(command === 'reset') {
-      lmas.toy.reset();
-    } else if(command === 'load') {
-      term.exec("reset",true);
-      lmas.toy.load(toyAsm.assemble(lmas.editor.getValue()));
-    } else {
-      term.echo('unknown command');
-    }
+        if(lmas.lastOperation === 0) {
+          term.exec("halt",true);
+        } else {
+          term.exec("step",true)
+        }
+      },lmas.animation.duration);
+    
+    },
+    reset: lmas.toy.reset,
+    load: function() { lmas.toy.load(toyAsm.assemble(lmas.editor.getValue())); }
   }, {
-      greetings: machineType.toUpperCase() + ' Interface console\n',
-      name: 'console',
-      height: 200,
-      prompt: machineType +'$ ',
-      keydown: function(keyEvent, term) {
-        if(keyEvent.ctrlKey) {
-          switch(keyEvent.keyCode) {
-            case 67: //CTRL+C
-              term.exec("reset");
-              return false;
-            case 76: //CTRL+L
-              term.exec("load");
-              return false;
-            case 82: //CTRL+R
-              term.exec("run");
-              return false;
-            case 83: //CTRL+S
-              term.exec("step");
-              return false;
-            default:
-              return true;
-          }
+    greetings: machineType.toUpperCase() + ' Interface console\n',
+    name: 'console',
+    height: 200,
+    prompt: machineType +'$ ',
+    keydown: function(keyEvent, term) {
+      if(keyEvent.ctrlKey) {
+        switch(keyEvent.keyCode) {
+          case 67: //CTRL+C
+            term.exec("reset");
+            return false;
+          case 76: //CTRL+L
+            term.exec("load");
+            return false;
+          case 82: //CTRL+R
+            term.exec("run");
+            return false;
+          case 83: //CTRL+S
+            term.exec("step");
+            return false;
+          default:
+            return true;
         }
       }
+    }
   });
 };
 

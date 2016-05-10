@@ -6,21 +6,27 @@ toy.create = function(handlers) {
   var map = toy.util.create(handlers);
   var result = {};
   result.run = function() {
-    map.disableHandlers();
+    map.disableCallbacks();
     do {
     } while(result.step());
-    map.enableHandlers();
+    map.enableCallbacks();
+  };
+
+  var raiseEvent = function(name,eventData) {
+    if(map.callbacksEnabled && handlers && handlers[name]) {
+      handlers[name](eventData);
+    }
   };
 
   result.step = function() {
     var instruction = toy.cycle.fetch(map.pc,map.ram);
+    raiseEvent("stepStart", {pc: map.pc(),instruction: instruction});
     var operation = toy.cycle.interpret(instruction);
     map.pc(map.pc() + 1);
-    var result = operation(map.pc,map.registers,map.ram);
-    if(map.enableCallbacks && handlers && handlers.stepEnd) {
-      handlers.stepEnd(map.pc());
-    }
-    return result;
+    var stepResult = operation(map.pc,map.registers,map.ram);
+    var state = {pc: map.pc, registers: map.registers, ram: map.ram};
+    raiseEvent("stepEnd",{pc: map.pc(),state:state, instruction: instruction});
+    return stepResult;
   };
 
   result.reset = function() {
@@ -28,6 +34,9 @@ toy.create = function(handlers) {
     bytes[0] = 1;
     bytes[1] = 0x10;
     result.load(bytes);
+    if(handlers && handlers.reset) {
+      handlers.reset({pc:bytes.pc()});
+    }
   };
 
   result.load = function(bytes) {
@@ -44,6 +53,9 @@ toy.create = function(handlers) {
       _.each(bytes.slice(2), function(opcode,idx) {
         map.ram(map.pc() + idx, opcode);
       });
+    }
+    if(map.callbacksEnabled && handlers && handlers.load) {
+      handlers.load({pc:map.pc()});
     }
   };
 
@@ -67,7 +79,7 @@ toy.util.create = function(handlers) {
 
 toy.util.decorate = function(arr,handlers) {
   arr.handlers = handlers;
-  arr.enableCallbacks = true;
+  arr.callbacksEnabled = true;
   _.each(_.functions(toy.util.fns), function(fn) {
     arr[fn] = toy.util.fns[fn](arr);
   });
@@ -106,24 +118,24 @@ toy.util.fns.header = function(obj) {
   };
 };
 
-toy.util.fns.disableHandlers = function(obj) {
+toy.util.fns.disableCallbacks = function(obj) {
   return function() {
-    obj.enableCallbacks = false;
+    obj.callbacksEnabled = false;
   };
 };
 
-toy.util.fns.enableHandlers = function(obj) {
+toy.util.fns.enableCallbacks = function(obj) {
   return function() {
-    obj.enableCallbacks = true;
+    obj.callbacksEnabled = true;
   };
 };
 
 toy.util.fns.handleEvent = function(obj) {
-  return function(eventType,value,addr) {
-    if(obj.enableCallbacks &&
+  return function(eventType, eventData) {
+    if(obj.callbacksEnabled &&
         obj.handlers && 
         obj.handlers[eventType]) {
-      obj.handlers[eventType](value,addr);
+      obj.handlers[eventType](eventData);
     }
   };
 }
@@ -134,7 +146,7 @@ toy.util.fns.pc = function(obj) {
       return obj[toy.util.offsets.PC];
     case 1:
       var newPc = value & 0x00FF;
-      obj.handleEvent("pcChange",newPc);
+      obj.handleEvent("pcChange",{pc: newPc});
       obj[toy.util.offsets.PC] = newPc;
       break;
     default:
@@ -147,7 +159,7 @@ toy.util.fns.setAll = function(obj) {
   return function(arr, offset, eventType) {
     _.each(arr, function(value, idx) {
       var newValue = value & 0xFFFF;
-      obj.handleEvent(eventType,newValue,idx);
+      obj.handleEvent(eventType,{address: idx, value: newValue});
       obj[offset + idx] = newValue;
     });
   };
@@ -165,7 +177,7 @@ toy.util.fns.registers = function(obj) {
       return obj.setAll(register,toy.util.offsets.REG,"registerChange");
     case 2:
       var newValue = value & 0xFFFF;
-      obj.handleEvent("registerChange",newValue,register);
+      obj.handleEvent("registerChange",{address: register, value: newValue});
       obj[toy.util.offsets.REG + register] = value;
       break;
     default:
@@ -186,7 +198,7 @@ toy.util.fns.ram = function(obj) {
       return obj.setAll(address,toy.util.offsets.RAM,"memoryChange");
     case 2:
       var newValue = value & 0xFFFF;
-      obj.handleEvent("memoryChange",newValue,address);
+      obj.handleEvent("memoryChange",{address: address, value: newValue});
       obj[toy.util.offsets.RAM + address] = value;
       break;
     default:
@@ -199,7 +211,14 @@ toy.util.fns.ram = function(obj) {
 
 toy.cycle = {};
 toy.cycle.parse = function(instruction) {
-  return [instruction >> 12,(instruction & 0x0F00) >> 8,(instruction & 0x00FF)];
+  var addr = (instruction & 0x00FF);
+  return {
+    opcode: instruction >> 12, 
+    d: (instruction & 0x0F00) >> 8, 
+    s: addr >> 4,
+    t: addr & 0x0F,
+    addr: addr
+  };
 };
 toy.cycle.fetch = function(pc, ram) {
   var instruction = ram(pc());
@@ -207,11 +226,11 @@ toy.cycle.fetch = function(pc, ram) {
 };
 
 toy.cycle.interpret = function(instruction) {
-  var opcode = instruction[0];
-  var d = instruction[1];
-  var s = instruction[2] >> 4;
-  var t = instruction[2] & 0x0F;
-  var addr = instruction[2];
+  var opcode = instruction.opcode;
+  var d = instruction.d;
+  var s = instruction.s;
+  var t = instruction.t;
+  var addr = instruction.addr;
 
   var instructions = {
     0x0: function() {
