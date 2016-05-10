@@ -134,6 +134,14 @@ describe('LMAS', function() {
           lmas.events.toy.memoryChange(0xcf24,0xc0);
           expect($('#MC0').text()).toEqual('CF24');
         });
+        it('animates changes to pc', function() {
+          lmas.events.toy.pcChange(0x10);
+          expect(lmas.animateCell).toHaveBeenCalledWith('#PC',{color: '#08b9ee'});
+        });
+        it('animates memory location pointed to by pc at step-end', function() {
+          lmas.events.toy.stepEnd(0x11);
+          expect(lmas.animateCell).toHaveBeenCalledWith('#M11',{color: '#08b9ee'});
+        });
         it('animates changes to memory', function() {
           lmas.events.toy.memoryChange(0xcf24,0xc0);
           expect(lmas.animateCell).toHaveBeenCalledWith('#MC0');

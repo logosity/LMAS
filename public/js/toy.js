@@ -6,11 +6,21 @@ toy.create = function(handlers) {
   var map = toy.util.create(handlers);
   var result = {};
   result.run = function() {
-    var operation;
+    map.disableHandlers();
     do {
-    operation = toy.cycle.interpret(toy.cycle.fetch(map.pc,map.ram));
+    } while(result.step());
+    map.enableHandlers();
+  };
+
+  result.step = function() {
+    var instruction = toy.cycle.fetch(map.pc,map.ram);
+    var operation = toy.cycle.interpret(instruction);
     map.pc(map.pc() + 1);
-    } while(operation(map.pc,map.registers,map.ram));
+    var result = operation(map.pc,map.registers,map.ram);
+    if(map.enableCallbacks && handlers && handlers.stepEnd) {
+      handlers.stepEnd(map.pc());
+    }
+    return result;
   };
 
   result.reset = function() {
@@ -57,6 +67,7 @@ toy.util.create = function(handlers) {
 
 toy.util.decorate = function(arr,handlers) {
   arr.handlers = handlers;
+  arr.enableCallbacks = true;
   _.each(_.functions(toy.util.fns), function(fn) {
     arr[fn] = toy.util.fns[fn](arr);
   });
@@ -95,9 +106,23 @@ toy.util.fns.header = function(obj) {
   };
 };
 
+toy.util.fns.disableHandlers = function(obj) {
+  return function() {
+    obj.enableCallbacks = false;
+  };
+};
+
+toy.util.fns.enableHandlers = function(obj) {
+  return function() {
+    obj.enableCallbacks = true;
+  };
+};
+
 toy.util.fns.handleEvent = function(obj) {
   return function(eventType,value,addr) {
-    if(obj.handlers && obj.handlers[eventType]) {
+    if(obj.enableCallbacks &&
+        obj.handlers && 
+        obj.handlers[eventType]) {
       obj.handlers[eventType](value,addr);
     }
   };

@@ -11,9 +11,45 @@ describe('TOY machine', function() {
       toyObj.run();
       var dump = toyObj.dump();
       expect(dump.pc()).toEqual(0x14);
-      expect(dump.registers(2)).toEqual(0x42);
       expect(dump.registers(3)).toEqual(0x41);
       expect(dump.registers(4)).toEqual(0x01);
+      expect(dump.registers(2)).toEqual(0x42);
+    });
+    it('can step through a program', function() {
+      toyObj.load(Uint16Array.from([0,0x10,0x7341,0x7401,0x1234,0x0000]));
+
+      toyObj.step();
+      var dump = toyObj.dump();
+      expect(dump.pc()).toEqual(0x11);
+      expect(dump.registers(3)).toEqual(0x41);
+      expect(dump.registers(4)).toEqual(0x00);
+      expect(dump.registers(2)).toEqual(0x00);
+
+      toyObj.step();
+      var dump = toyObj.dump();
+      expect(dump.pc()).toEqual(0x12);
+      expect(dump.registers(4)).toEqual(0x01);
+
+      toyObj.step();
+      var dump = toyObj.dump();
+      expect(dump.pc()).toEqual(0x13);
+      expect(dump.registers(2)).toEqual(0x42);
+
+      toyObj.step();
+      var dump = toyObj.dump();
+      expect(dump.pc()).toEqual(0x14);
+
+      toyObj.step();
+      var dump = toyObj.dump();
+      expect(dump.pc()).toEqual(0x15);
+    });
+    it('raises an event at the end of a step', function() {
+      var handlers = { stepEnd: function() {} };
+      spyOn(handlers,"stepEnd");
+      var toyObj = toy.create(handlers);
+      toyObj.load(Uint16Array.from([0,0x10,0x1234]));
+      toyObj.step();
+      expect(handlers.stepEnd).toHaveBeenCalledWith(0x11);
     });
   });
 
@@ -159,6 +195,27 @@ describe('TOY machine', function() {
         it('ram changes are 16-bit', function() {
           bytes.ram(2,0x10000);
           expect(handlers.memoryChange).toHaveBeenCalledWith(0x00,2);
+        });
+        describe('turning handlers on and off', function() {
+          it('disable all handlers', function() {
+            bytes.disableHandlers();
+            bytes.pc(0x10);
+            bytes.registers(0,0x42);
+            bytes.ram(0,0x42);
+            expect(handlers.pcChange).not.toHaveBeenCalled();
+            expect(handlers.registerChange).not.toHaveBeenCalled();
+            expect(handlers.memoryChange).not.toHaveBeenCalled();
+          });  
+          it('enable all handlers', function() {
+            bytes.disableHandlers();
+            bytes.enableHandlers();
+            bytes.pc(0x10);
+            bytes.registers(0,0x42);
+            bytes.ram(0,0x42);
+            expect(handlers.pcChange).toHaveBeenCalled();
+            expect(handlers.registerChange).toHaveBeenCalled();
+            expect(handlers.memoryChange).toHaveBeenCalled();
+          });  
         });
       });
     });

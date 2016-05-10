@@ -2,12 +2,14 @@
 
 var lmas = {};
 
-lmas.animateCell = function(id) {
+lmas.animateCell = function(id,settings) {
+  var config = _.extend({color: '#ff0000',duration:2000},settings);
   var elem = $(id);
-  elem.css("background-color",'#ff0000');
+  elem.css("background-color",config.color);
   elem.animate({ backgroundColor: "#ffffff"},{
-    duration: 2000,
+    duration: config.duration,
     easing: "swing",
+    queue: false,
   });
 }
 
@@ -24,7 +26,12 @@ lmas.events = {
       $(id).text(sprintf('%04X',value));
     },
     pcChange: function(value) {
+      lmas.animateCell('#PC',{color:'#08b9ee'});
       $('#PC').text(sprintf('%02X',value));
+    },
+    stepEnd: function(address) {
+      var id = '#M' + sprintf('%02X',address);
+      lmas.animateCell(id,{color:'#08b9ee'});
     }
   }
 };
@@ -164,9 +171,19 @@ lmas.initTerminal = function(machineType, elem) {
   return elem.terminal(function(command, term) {
     if(command === 'run') {
       lmas.toy.run();
+      lmas.toy.load(lmas.toy.dump());
+    } else if(command === 'halt') {
+        window.clearInterval(lmas.activeInterval);
+    } else if(command === 'step') {
+      lmas.toy.step();
+    } else if(command === 'jog') {
+      lmas.activeInterval = setInterval(function() {
+        term.exec("step",true)
+      },1000);
     } else if(command === 'reset') {
       lmas.toy.reset();
     } else if(command === 'load') {
+      term.exec("reset",true);
       lmas.toy.load(toyAsm.assemble(lmas.editor.getValue()));
     } else {
       term.echo('unknown command');
@@ -175,7 +192,27 @@ lmas.initTerminal = function(machineType, elem) {
       greetings: machineType.toUpperCase() + ' Interface console\n',
       name: 'console',
       height: 200,
-      prompt: machineType +'$ '
+      prompt: machineType +'$ ',
+      keydown: function(keyEvent, term) {
+        if(keyEvent.ctrlKey) {
+          switch(keyEvent.keyCode) {
+            case 67: //CTRL+C
+              term.exec("reset");
+              return false;
+            case 76: //CTRL+L
+              term.exec("load");
+              return false;
+            case 82: //CTRL+R
+              term.exec("run");
+              return false;
+            case 83: //CTRL+S
+              term.exec("step");
+              return false;
+            default:
+              return true;
+          }
+        }
+      }
   });
 };
 
