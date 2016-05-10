@@ -40,4 +40,5 @@ beforeEach(function() {
 
 afterEach(function() {
 //  console.log((Date.now() - lmastest.startTime) + " - " + lmastest.lastSpec.description);
+
 });

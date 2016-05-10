@@ -108,8 +108,9 @@ toy.util.fns.pc = function(obj) {
     case 0:
       return obj[toy.util.offsets.PC];
     case 1:
-      obj.handleEvent("pcChange",value);
-      obj[toy.util.offsets.PC] = value;
+      var newPc = value & 0x00FF;
+      obj.handleEvent("pcChange",newPc);
+      obj[toy.util.offsets.PC] = newPc;
       break;
     default:
       throw {name:"arguments", message: "too many arguments"};
@@ -120,8 +121,9 @@ toy.util.fns.pc = function(obj) {
 toy.util.fns.setAll = function(obj) {
   return function(arr, offset, eventType) {
     _.each(arr, function(value, idx) {
-      obj.handleEvent(eventType,value,idx);
-      obj[offset + idx] = value;
+      var newValue = value & 0xFFFF;
+      obj.handleEvent(eventType,newValue,idx);
+      obj[offset + idx] = newValue;
     });
   };
 };
@@ -137,7 +139,8 @@ toy.util.fns.registers = function(obj) {
       }
       return obj.setAll(register,toy.util.offsets.REG,"registerChange");
     case 2:
-      obj.handleEvent("registerChange",value,register);
+      var newValue = value & 0xFFFF;
+      obj.handleEvent("registerChange",newValue,register);
       obj[toy.util.offsets.REG + register] = value;
       break;
     default:
@@ -157,7 +160,8 @@ toy.util.fns.ram = function(obj) {
       }
       return obj.setAll(address,toy.util.offsets.RAM,"memoryChange");
     case 2:
-      obj.handleEvent("memoryChange",value,address);
+      var newValue = value & 0xFFFF;
+      obj.handleEvent("memoryChange",newValue,address);
       obj[toy.util.offsets.RAM + address] = value;
       break;
     default:
@@ -183,7 +187,6 @@ toy.cycle.interpret = function(instruction) {
   var s = instruction[2] >> 4;
   var t = instruction[2] & 0x0F;
   var addr = instruction[2];
-  var value = addr;
 
   var instructions = {
     0x0: function() {
@@ -193,10 +196,63 @@ toy.cycle.interpret = function(instruction) {
       registers(d, registers(s) + registers(t));
       return true;
     },
-    0xB: function(pc,registers,ram) {
-      registers(d, value);
+    0x2: function(pc,registers,ram) {
+      registers(d, registers(s) - registers(t));
       return true;
     },
+    0x3: function (pc,registers,ram) {
+      registers(d, registers(s) & registers(t));
+      return true;
+    },
+    0x4: function (pc,registers,ram) {
+      registers(d, registers(s) ^ registers(t));
+      return true;
+    },
+    0x5: function (pc,registers,ram) {
+      registers(d, registers(s) << registers(t));
+      return true;
+    },
+    0x6: function (pc,registers,ram) {
+      registers(d, registers(s) >> registers(t));
+      return true;
+    },
+    0x7: function(pc,registers,ram) {
+      registers(d, addr);
+      return true;
+    },
+    0x8: function(pc,registers,ram) {
+      registers(d, ram(addr));
+      return true;
+    },
+    0x9: function(pc,registers,ram) {
+      ram(addr, registers(d));
+      return true;
+    },
+    0xA: function(pc,registers,ram) {
+      registers(d, ram(registers(t)));
+      return true;
+    },
+    0xB: function(pc,registers,ram) {
+      ram(registers(t), registers(d));
+      return true;
+    },
+    0xC: function(pc,registers,ram) {
+      if(registers(d) === 0) pc(addr);  
+      return true;
+    },
+    0xD: function(pc,registers,ram) {
+      if(registers(d) > 0) pc(addr);  
+      return true;
+    },
+    0xE: function(pc,registers,ram) {
+      pc(registers(d));  
+      return true;
+    },
+    0xF: function(pc,registers,ram) {
+      registers(d,pc());
+      pc(addr);  
+      return true;
+    }
   };
   return instructions[opcode];
 };
