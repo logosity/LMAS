@@ -25,6 +25,8 @@ toyAsm.assemble = function(code) {
     return op !== ""
   });
 
+  opcodes = _.map(opcodes, function(o) { return o.trim(); });
+
   _.each(opcodes, function(op,idx) { 
     check(op,/^[0-9,A-F]+$/, toyAsm.createError("syntax", "syntax error", op, idx + 1));
     check(op,/^[0-9,A-F]{4}$/, toyAsm.createError( "invalid", "invalid opcode", op, idx + 1));

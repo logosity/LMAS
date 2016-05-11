@@ -29,6 +29,11 @@ describe('TOY ASM', function() {
       var actual = function() { toyAsm.assemble(code); };
       expect(actual).toThrow({name:"invalid", line: 3, message: "invalid opcode, line 3: F4F"});
     });
+    it('will not throw if instruction surrounded by whitespace', function() {
+      var code = "    1234   \n   5678\nFFFF";
+      var binary = Uint16Array.from([0,16,0x1234,0x5678,0xFFFF]);
+      expect(toyAsm.assemble(code)).toEqual(binary);
+    });
   });
   describe('serialization', function() {
     it('deserializes to TOY byte code', function() {

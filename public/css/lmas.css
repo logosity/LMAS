@@ -8,6 +8,18 @@
   width: auto;
 }
 
+.cm-keyword-2 {
+  color:#c0c0c0;
+}
+
+.cm-keyword-3 {
+  color:#FF0000;
+}
+
+.cm-operator {
+  color:#FF0000;
+}
+
 .pixel {
   text-align: center;
   vertical-align: bottom;

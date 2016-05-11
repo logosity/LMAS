@@ -1,0 +1,62 @@
+<!doctype html>
+
+<title>CodeMirror: LASM assembly mode</title>
+<meta charset="utf-8"/>
+<link rel=stylesheet href="../../doc/docs.css">
+
+<link rel="stylesheet" href="../../lib/codemirror.css">
+<script src="../../lib/codemirror.js"></script>
+<script type="text/javascript" src="../../addon/mode/simple.js"></script>
+<script src="lasm.js"></script>
+<style type="text/css">.CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}</style>
+<div id=nav>
+  <a href="http://codemirror.net"><h1>CodeMirror</h1><img id=logo src="../../doc/logo.png"></a>
+
+  <ul>
+    <li><a href="../../index.html">Home</a>
+    <li><a href="../../doc/manual.html">Manual</a>
+    <li><a href="https://github.com/codemirror/codemirror">Code</a>
+  </ul>
+  <ul>
+    <li><a href="../index.html">Language modes</a>
+    <li><a class=active href="#">LASM assembly</a>
+  </ul>
+</div>
+
+<article>
+<h2>LMAS assembly mode</h2>
+
+
+<div><textarea id="code" name="code">
+; all the codes/syntax. An '_' means nibble is not used in instruction
+ORG  $10          ; set the location counter (i.e. where the program is to be loaded and execution started)
+SET  IO $FF        ; define an absolute label (in this case, to the IO port at $FF) 
+     BRK           ; 0___
+LOOP ADDR,R2 R3 R4 ; 1234 (with 'loop' as a relative label)
+     SUBR,R2 R3 R4 ; 2234 
+     ANDR,R2 R3 R4 ; 3234
+     XORR,R2 R3 R4 ; 4234
+     SHLR,R2 R3 R4 ; 5234
+     SHRR,R2 R3 R4 ; 6234
+     LOAD,R2 #$0A  ; 720A
+     LOAD,R2 $0A   ; 820A
+     STOR,R2 $0A   ; 920A
+     LOAD,R2 RA    ; A2_A
+     STOR,R2 RA    ; B2_A
+     BRNZ,R2 LOOP  ; C211 (assuming loop is on 0x11)
+     BRNP,R2 LOOP  ; D211 (assuming loop is on 0x11)
+     JMPR,R2       ; E2__
+     JMPL,R2       ; F2__
+     NOP           ; D0__ (pseudo-op, as R0 is always zero)
+     LOAD,R2 R3    ; 1203 (pseudo-op, "load register")
+     JMP #$0A      ; C00A (pseudo-op, "goto")
+</textarea></div>
+
+    <script>
+      var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+        lineNumbers: true
+      });
+    </script>
+
+    <p><strong>MIME types defined:</strong> <code>text/x-lasm</code>.</p>
+  </article>
