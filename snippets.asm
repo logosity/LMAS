@@ -28,28 +28,34 @@ loop            SUB 2 2 3               ; 2223
                 LOD 9 #$FF              ; 79FF
 
 ; all the codes/syntax. An '_' means nibble is not used in instruction
-ORG  $10          ; set the location counter (i.e. where the program is to be loaded and execution started)
-SET  IO $FF        ; define an absolute label (in this case, to the IO port at $FF) 
-     BRK           ; 0___
-LOOP ADDR,R2 R3 R4 ; 1234 (with 'loop' as a relative label)
-     SUBR,R2 R3 R4 ; 2234 
-     ANDR,R2 R3 R4 ; 3234
-     XORR,R2 R3 R4 ; 4234
-     SHLR,R2 R3 R4 ; 5234
-     SHRR,R2 R3 R4 ; 6234
-     LOAD,R2 #$0A  ; 720A
-     LOAD,R2 $0A   ; 820A
-     STOR,R2 $0A   ; 920A
-     LOAD,R2 RA    ; A2_A
-     STOR,R2 RA    ; B2_A
-     BRNZ,R2 LOOP  ; C211 (assuming loop is on 0x11)
-     BRNP,R2 LOOP  ; D211 (assuming loop is on 0x11)
-     JMPR,R2       ; E2__
-     JMPL,R2       ; F2__
-     NOP           ; D0__ (pseudo-op, as R0 is always zero)
-     LOAD,R2 R3    ; 1203 (pseudo-op, "load register")
-     JMP #$0A      ; C00A (pseudo-op, "goto")
+ORG   $10                     ; set the pc (and LC)
+IO EQU $FF                    ; define an absolute label
+           BRK                ; 0___
+LOOP       ADDR,R2 R3 R4      ; 1234 (incl label 'loop')
+           SUBR,R2 R3 R4      ; 2234 
+           ANDR,R2 R3 R4      ; 3234
+           XORR,R2 R3 R4      ; 4234
+           SHLR,R2 R3 R4      ; 5234
+           SHRR,R2 R3 R4      ; 6234
+           LOAD,R2 #$0A+42    ; 720A
+           LOAD,R2 MSG+1      ; 820A
+           STOR,R2 $0A        ; 920A
+           LOAD,R2 RA         ; A2_A
+           STOR,R2 RA         ; B2_A
+           BRNZ,R2 LOOP       ; C211 (assuming loop is on 0x11)
+           BRNP,R2 LOOP       ; D211 (assuming loop is on 0x11)
+           JMPR,R2            ; E2__
+           JMPL,R2            ; F2__
+           NOP                ; D0__ (pseudo-op, as R0 is always zero)
+           LOAD,R2 R3         ; 1203 (pseudo-op, "load register")
+           JMP #$0A           ; C00A (pseudo-op, "goto")
 
+MSG        ORG $F0
+myarray    DS 5               ; always words (16 bit)     
+           HEX 68 65 6C 6F 2C 20 77 6F 72 6C 64 21 00  
+           ASCII  "Hello World!"    ; same HEX line minus the 00 
+           ASCIIZ "Hello World!"    ; same as HEX line including the 00
+SPACE 42
 
 
 

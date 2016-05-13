@@ -1,4 +1,4 @@
-# Learning Machine Architecture Simulator (LMAS)
+# Learning Machine Emulation Project (LMAS)
 This is (will be) an implementation of two educational computer architectures. The first is [TOY](http://introcs.cs.princeton.edu/java/62toy/) while the second is [LMC](http://povinelli.eece.mu.edu/teaching/eece2710/lmc.html#The%20Little%20Man%20Assembly%20Language).
 
 ## Why another implementation?
@@ -17,7 +17,22 @@ http://localhost:8000/tests[/index.html]
 ```
 
 ### Autotests
-Add a suitable reload plugin (e.g. [LivePage for Chrome](https://chrome.google.com/webstore/detail/livepage/pilnojpmdoofaelbinaeodfpjheijkbh?hl=en)) and the tests will run automatically when changed. 
+Add a suitable reload plugin (e.g. [LiveReload for Chrome](https://chrome.google.com/webstore/detail/livereload/jnihajbhpnppcggbcgedagnkighmdlei?hl=en)) and the tests will run automatically when changed. 
+
+(to use livereload with the python webserver above, install the appropriate module, e.g.: 'pip install livereload') and run it in the same directory as the web server.)
 
 ### Adding new tests
 Add dependencies and spec files to index.html as needed. 
+
+## (re)generating the grammar
+The assembly language grammar file is in pegjs format. There is a script in the project bin/ directory to regenerate it (requires the command line tool pegjs be installed, which is a node tool. So install, node as per your platform. Personally, I like using nvm to set it up, then follow the instrucitons on the pegjs site)
+
+To have it regen with every change, add a file watcher (e.g. I use entr: 'ls -F -d grammar/* | entr bin/update-grammar')
+
+## Editor
+To make the editor full screen type SHIFT-CTRL-F while the editor has focus.
+
+
+
+
+

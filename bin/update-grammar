@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# ls -d grammar/* | entr bin/update-grammar
+
+pegjs --cache -e toyGrammar grammar/toy.pegjs public/js/toy-grammar.js
+

@@ -247,7 +247,12 @@ lmas.createEditor = function(elem) {
     theme:'cobalt',
     lineNumbers: true,
     styleActiveLine: true,
-    matchBrackets: true
+    matchBrackets: true,
+    extraKeys: {
+      "Shift-Ctrl-F": function(cm) {
+        cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+      },
+    }  
   });
 };
 
