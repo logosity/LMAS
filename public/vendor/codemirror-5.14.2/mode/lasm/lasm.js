@@ -20,7 +20,7 @@ CodeMirror.defineSimpleMode("lasm", {
     {regex: /R[a-f\d]/i, token: "keyword-2"},
     {regex: /"[^"]*"?/i, token: "string"},
     {regex: /[$%]?[0-9A-F]+[\s]/i, token: "number"},
-    {regex: /[-+\/*,]+/, token: "operator"},
+    {regex: /[-+\/*,@]+/, token: "operator"},
     {regex: /^[a-z]+/, token: "variable"},
   ],
   // The meta property contains global information about the mode. It
