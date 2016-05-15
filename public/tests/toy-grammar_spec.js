@@ -61,9 +61,6 @@ describe('TOY assembly grammar', function() {
     it('@ macro will use current lc', function() {
       var expected = [
         {
-          directive: "ORG",
-          operands: {address: "*"},
-        }, {
           directive: "HEX",
           operands: {data: [0x1234,0x5678]}
         }

@@ -99,7 +99,7 @@ toyGrammar = (function() {
             return [createOrg(val), createHex(data, text)];
           },
         peg$c52 = function(data) {
-            return [createOrg('*'), createHex(data)];
+            return [createHex(data)];
           },
         peg$c53 = function(text, dir, comm) {
             return _.extend({}, text, dir, comm);

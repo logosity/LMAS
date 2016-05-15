@@ -121,7 +121,7 @@ at
     return [createOrg(val), createHex(data, text)];
   }
   / "@" _+ data:hexDataArray {
-    return [createOrg('*'), createHex(data)];
+    return [createHex(data)];
   }
 
 
