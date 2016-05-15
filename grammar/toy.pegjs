@@ -117,17 +117,11 @@ macro
   = _+ m:at { return m; }
 
 at
-  = "@" val:address _+ text:label _+ data:hexDataArray {
-    return [createOrg(val),
-            createHex(data, text)];
-  }
-  / "@" _+ text:label _+ data:hexDataArray {
-    return [createOrg('*'),
-            createHex(data, text)];
+  = "@" val:address _+ data:hexDataArray {
+    return [createOrg(val), createHex(data, text)];
   }
   / "@" _+ data:hexDataArray {
-    return [createOrg('*'),
-            createHex(data)];
+    return [createOrg('*'), createHex(data)];
   }
 
 
@@ -155,7 +149,10 @@ line
   / inst:instruction { return inst; }
 
   / text:label m:macro comm:comment {
-      return [_.extend(text, comm)].concat(m);
+      return [_.first(m), _.extend(text, comm), _.last(m)];
+    }
+  / m:macro {
+      return m;
     }
 
   / text:label comm:comment { return _.extend({}, text, comm); }

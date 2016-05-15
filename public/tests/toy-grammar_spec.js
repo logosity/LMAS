@@ -45,18 +45,30 @@ describe('TOY assembly grammar', function() {
     it('@ macro', function() {
       var expected = [
         {
-          label: "FOO",
-          comment: "stuff, and more"
-        }, {
           directive: "ORG",
           operands: {address: "$10"},
         }, {
-          label: "BAR",
+          label: "FOO",
+          comment: "stuff, and more"
+        }, {
           directive: "HEX",
           operands: {data: [0x1234,0x5678]}
         }
       ];
-      var line = "foo @$10 BAR 1234 5678 ; stuff, and more";
+      var line = "foo @$10 1234 5678 ; stuff, and more";
+      expect(toyGrammar.parse(line)).toEqual(expected);
+    });
+    it('@ macro will use current lc', function() {
+      var expected = [
+        {
+          directive: "ORG",
+          operands: {address: "*"},
+        }, {
+          directive: "HEX",
+          operands: {data: [0x1234,0x5678]}
+        }
+      ];
+      var line = " @ 1234 5678";
       expect(toyGrammar.parse(line)).toEqual(expected);
     });
   });
