@@ -143,8 +143,9 @@ describe('LMAS', function() {
           expect(lmas.animation.stateChange).toHaveBeenCalledWith('#PC',{bgcolor: '#08b9ee'});
         });
         it('animates memory location & pc after load', function() {
-          lmas.events.toy.load({pc: 0x11});
+          lmas.events.toy.load({oldpc: 0x42, pc: 0x11});
           expect(lmas.animation.stateChange).toHaveBeenCalledWith('#PC',{bgcolor: '#08b9ee', queue:true,persist:true});
+          expect(lmas.animation.stateChange).toHaveBeenCalledWith('#M42',{bgcolor: '#FFFFFF', queue:true,persist:true});
           expect(lmas.animation.stateChange).toHaveBeenCalledWith('#M11',{bgcolor: '#08b9ee', queue:true,persist:true});
         });
         it('animates memory location pointed to by pc at step-end', function() {
@@ -255,9 +256,9 @@ describe('LMAS', function() {
             expect(editor.redo).toHaveBeenCalled();
           });
           it('loads the editor contents into machine memory', function() {
-            spyOn(editor, 'getValue').and.returnValue('4111');
+            spyOn(editor, 'getValue').and.returnValue(' @ 4111');
             $('.editor-load').trigger('click');
-            expect($('.mem-cells').find('#M10').text()).toBe("4111");
+            expect($('.mem-cells').find('#M00').text()).toBe("4111");
           });
         });
       });

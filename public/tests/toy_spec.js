@@ -66,14 +66,14 @@ describe('TOY machine', function() {
       spyOn(handlers,"reset");
       var toyObj = toy.create(handlers);
       toyObj.reset();
-      expect(handlers.reset).toHaveBeenCalledWith({pc:0x10});
+      expect(handlers.reset).toHaveBeenCalledWith({pc:0});
     });
     it('raises an event on load', function() {
       var handlers = { load: function() {} };
       spyOn(handlers,"load");
       var toyObj = toy.create(handlers);
       toyObj.load(toy.util.create());
-      expect(handlers.load).toHaveBeenCalledWith({pc:0x10});
+      expect(handlers.load).toHaveBeenCalledWith({oldpc: 0, pc:0});
     });
   });
 
@@ -105,7 +105,7 @@ describe('TOY machine', function() {
       var bytes = toyObj.dump();
       expect(bytes.length).toEqual(274);
       expect(bytes.header()).toEqual(1);
-      expect(bytes.pc()).toEqual(0x10);
+      expect(bytes.pc()).toEqual(0);
       _.each(bytes.slice(2),function(b) {
         expect(b).toEqual(0);
       });
@@ -188,11 +188,11 @@ describe('TOY machine', function() {
         });
         it('changes to pc', function() {
           bytes.pc(0x20);
-          expect(handlers.pcChange).toHaveBeenCalledWith({pc: 0x20});
+          expect(handlers.pcChange).toHaveBeenCalledWith({oldpc: 0, pc: 0x20});
         });  
         it('pc changes are 8-bit', function() {
           bytes.pc(0x100);
-          expect(handlers.pcChange).toHaveBeenCalledWith({pc: 0x00});
+          expect(handlers.pcChange).toHaveBeenCalledWith({oldpc: 0, pc: 0x00});
         });
         it('changes to single registers', function() {
           bytes.registers(1,0);

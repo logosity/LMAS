@@ -19,7 +19,7 @@ CodeMirror.defineSimpleMode("lasm", {
     {regex: /(?:brk|addr,r[0-9A-F]|subr,r[0-9A-F]|andr,r[0-9A-F]|xorr,r[0-9A-F]|shlr,r[0-9A-F]|shrr,r[0-9A-F]|load,r[0-9A-F]|stor,r[0-9A-F]|brnz,r[0-9A-F]|brnp,r[0-9A-F]|jmpr,r[0-9A-F]|jmpl,r[0-9A-F]|nop|jmp|hex|ds|ascii|asciiz|space)\b/i, token: "keyword"},
     {regex: /R[a-f\d]/i, token: "keyword-2"},
     {regex: /"[^"]*"?/i, token: "string"},
-    {regex: /[$%]?[0-9A-F]+[\s]/i, token: "number"},
+    {regex: /[$%]?[0-9A-F]+[\s]?/i, token: "number"},
     {regex: /[-+\/*,@]+/, token: "operator"},
     {regex: /^[a-z]+/, token: "variable"},
   ],

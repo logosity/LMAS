@@ -32,7 +32,7 @@ toy.create = function(handlers) {
   result.reset = function() {
     var bytes = toy.util.create();
     bytes[0] = 1;
-    bytes[1] = 0x10;
+    bytes[1] = 0;
     result.load(bytes);
     if(handlers && handlers.reset) {
       handlers.reset({pc:bytes.pc()});
@@ -43,6 +43,7 @@ toy.create = function(handlers) {
     if(!(bytes instanceof Uint16Array)) {
       throw {name: "invalid", message: "invalid binary format for loading"};
     }
+    var oldPc = map.pc();
     toy.util.decorate(bytes);
     map.pc(bytes.pc());
 
@@ -55,7 +56,7 @@ toy.create = function(handlers) {
       });
     }
     if(map.callbacksEnabled && handlers && handlers.load) {
-      handlers.load({pc:map.pc()});
+      handlers.load({oldpc: oldPc, pc:map.pc()});
     }
   };
 
@@ -141,12 +142,13 @@ toy.util.fns.handleEvent = function(obj) {
 }
 toy.util.fns.pc = function(obj) {
   return function(value) {
+    var oldPc = obj[toy.util.offsets.PC];
     switch(arguments.length) {
     case 0:
-      return obj[toy.util.offsets.PC];
+      return oldPc;
     case 1:
       var newPc = value & 0x00FF;
-      obj.handleEvent("pcChange",{pc: newPc});
+      obj.handleEvent("pcChange",{oldpc: oldPc ,pc: newPc});
       obj[toy.util.offsets.PC] = newPc;
       break;
     default:

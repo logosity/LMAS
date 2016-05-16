@@ -58,6 +58,7 @@ lmas.events = {
     },
     load: function(eventData) {
       lmas.animation.stateChange('#PC',{bgcolor:'#08b9ee',queue:true,persist:true});
+      lmas.animation.stateChange(lmas.ui.memId(eventData.oldpc),{bgcolor:'#FFFFFF',queue:true,persist:true});
       lmas.animation.stateChange(lmas.ui.memId(eventData.pc),{bgcolor:'#08b9ee',queue:true,persist:true});
     },
     stepStart: function(eventData) {
@@ -238,7 +239,7 @@ lmas.initViewHandlers = function(storageKey, elem, editor) {
   });
 
   elem.find('.editor-load').click(function(){
-    lmas.toy.load(toyAsm.assemble(editor.getValue()));
+    lmas.toy.load(lasm.assemble(editor.getValue()));
   });
 };
 
@@ -248,6 +249,7 @@ lmas.createEditor = function(elem) {
     lineNumbers: true,
     styleActiveLine: true,
     matchBrackets: true,
+    lineWrapping: true,
     extraKeys: {
       "Shift-Ctrl-F": function(cm) {
         cm.setOption("fullScreen", !cm.getOption("fullScreen"));
@@ -278,7 +280,7 @@ lmas.initTerminal = function(machineType, elem) {
     
     },
     reset: lmas.toy.reset,
-    load: function() { lmas.toy.load(toyAsm.assemble(lmas.editor.getValue())); }
+    load: function() { lmas.toy.load(lasm.assemble(lmas.editor.getValue())); }
   }, {
     greetings: machineType.toUpperCase() + ' Interface console\n',
     name: 'console',
