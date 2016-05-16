@@ -101,7 +101,7 @@ describe('TOY assembly grammar', function() {
       shouldThrow(" HEX 1234,5678","Invalid character: ',' in data.");
     });
   });
-  describe('type one instructions', function() {
+  describe('instructions', function() {
     describe('overall structure', function() {
       it('has four parts', function() {
         var expected = {
@@ -133,19 +133,78 @@ describe('TOY assembly grammar', function() {
       });
       it('can be just opcode and operand', function() {
         var expected = { operation: "ADDR", operands: { d: 2, s: 3, t: 0xC }, };
-        var line = " ADDR,R2 R3 RC";
-        expect(toyGrammar.parse(line)).toEqual(expected);
+        expect(toyGrammar.parse(" ADDR,R2 R3 RC")).toEqual(expected);
       });
       it('must start with space if no label', function() {
         shouldThrow('ADDR,R2 R3 R4', "Invalid label character. (missing initial whitespace?)");
       });
     });
-    it('supported codes', function() {
-      _.each(["ADDR","SUBR","ANDR","XORR","SHLR","SHRR"],function(mnemonic) {
-        var expected = { operation: mnemonic, operands: { d: 0xF, s: 3, t: 4 }, };
-        var inst = " " + mnemonic + ",RF R3 R4";
+    describe('type one', function() {
+      it('must have two registers as operands', function() {
+        shouldThrow(" ADDR,RD", "Type 1 operations must have form XXXX,RX RX RX");
+      });
+      it('all supported codes have same format', function() {
+        _.each(["ADDR","SUBR","ANDR","XORR","SHLR","SHRR"],function(mnemonic) {
+          var expected = { operation: mnemonic, operands: { d: 0xF, s: 3, t: 4 }, };
+          var inst = " " + mnemonic + ",RF R3 R4";
 
-        expect(toyGrammar.parse(inst)).toEqual(expected);
+          expect(toyGrammar.parse(inst)).toEqual(expected);
+        });
+      });
+    });
+    //["LOAD","STOR","BRNZ","BRNP","JMPR","JMPL"]
+    describe('type 2', function() {
+      it('must have an address or a value as operands', function() {
+        shouldThrow(" LOAD,RD", "Type 2 operations must have form XXXX,RX [#]address");
+        shouldThrow(" LOAD,RD R1 R2", "Type 2 operations must have form XXXX,RX [#]address");
+      });
+      describe('LOAD', function() {
+        it('an immediate value', function() {
+          var expected = { operation: "LOAD", operands: { d: 2, value: 0x10 }, };
+          expect(toyGrammar.parse(" LOAD,R2 #$10")).toEqual(expected);
+        });
+        it('from an address', function() {
+          var expected = { operation: "LOAD", operands: { d: 2, address: 0x10 }, };
+          expect(toyGrammar.parse(" LOAD,R2 $10")).toEqual(expected);
+        });
+        it('from an address pointed to by a register', function() {
+          var expected = { operation: "LOAD", operands: { d: 2, register: 0xC }, };
+          expect(toyGrammar.parse(" LOAD,R2 RC")).toEqual(expected);
+        });
+      });
+      it('BRNP (BRaNch if register is Positive)', function() {
+        var expected = { operation: "BRNP", operands: { d: 2, address: 0x1C }, };
+        expect(toyGrammar.parse(" BRNP,R2 $1C")).toEqual(expected);
+      });
+      it('BRNZ (BRaNch if register is Zero)', function() {
+        var expected = { operation: "BRNZ", operands: { d: 0xD, address: 0x1C }, };
+        expect(toyGrammar.parse(" BRNZ,RD $1C")).toEqual(expected);
+      });
+      describe('STOR', function() {
+        it('to an address', function() {
+          var expected = { operation: "STOR", operands: { d: 2, address: 0x10 }, };
+          expect(toyGrammar.parse(" STOR,R2 $10")).toEqual(expected);
+        });
+        it('to an address pointed to by a register', function() {
+          var expected = { operation: "STOR", operands: { d: 2, register: 0xC }, };
+          expect(toyGrammar.parse(" STOR,R2 RC")).toEqual(expected);
+        });
+      });
+    });
+    describe('type 3', function() {
+      it('cannot have operands', function() {
+        shouldThrow(" JMPL,RD $10", "Type 3 operations cannot have operands");
+      });
+      it('HALT', function() {
+        expect(toyGrammar.parse(" HALT")).toEqual({ operation: "HALT" });
+      });
+      it('JMPR (JuMP to address pointed to by Register)', function() {
+        var expected = { operation: "JMPR", operands: { d: 0xD }, };
+        expect(toyGrammar.parse(" JMPR,RD")).toEqual(expected);
+      });
+      it('JMPL (JuMP to address pointed to by register and Link (put PC into register))', function() {
+        var expected = { operation: "JMPL", operands: { d: 0xD }, };
+        expect(toyGrammar.parse(" JMPL,RD")).toEqual(expected);
       });
     });
   });

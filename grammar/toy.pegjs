@@ -75,7 +75,9 @@ register
   = result:([Rr] hexNumber) { return upjoin(result); }
 
 address
-  = addr:([$%]? hexNumber hexNumber) { return upjoin(addr) }
+  = addr:([$%]? hexNumber hexNumber) { return upjoin(addr); }
+value
+  = val:("#" address) { return upjoin(val.slice(1)); }
 
 label
   = text:word { return {label: text}; }
@@ -84,24 +86,65 @@ comment
   = _* symbol:";" text:.* { return {comment: join(text) }; }
 
 instruction
-  = _+ op:t1_opcode _+ s:register _+ t:register {
-    var parts = splitOpcode(op);
-    var opcode = _.first(parts);
-    return { operation: opcode,
-      operands: { d: toNumber(_.last(parts)), s: toNumber(s), t: toNumber(t) }
+  = type_one_instruction
+  / type_two_instruction
+  / type_three_instruction
+
+type_one_instruction
+  = _+ op:type_one_opcode _+ s:register _+ t:register {
+    return { 
+      operation: op.operation, 
+      operands: _.extend(op.operands, {s: toNumber(s), t: toNumber(t) })
     };
   }
+  / _+ op:type_one_opcode .* { error("Type 1 operations must have form XXXX,RX RX RX"); }
 
-t1_opcode
-  = result:(mnemonic "," register) { return upjoin(result); }
+type_one_opcode
+  = op:type_one_mnemonic "," reg:register { return {operation:op, operands: { d: toNumber(reg) }}; }
 
-mnemonic
+type_one_mnemonic
   = "ADDR"i
   / "SUBR"i
   / "ANDR"i
   / "XORR"i
   / "SHLR"i
   / "SHRR"i
+
+type_two_instruction
+  = _+ op:type_two_opcode _+ register _+ register { error("Type 2 operations must have form XXXX,RX [#]address"); }
+  / _+ op:type_two_opcode _+ operand:type_two_argument {
+    return { 
+      operation: op.operation, 
+      operands: _.extend(op.operands, operand) 
+    };
+  }
+  / _+ op:type_two_opcode .* { error("Type 2 operations must have form XXXX,RX [#]address"); }
+
+type_two_argument
+  = result:value { return { value: toNumber(result) }; }
+  / result:address { return { address: toNumber(result) }; }
+  / result:register { return { register: toNumber(result) }; }
+
+type_two_opcode
+  = op:type_two_mnemonic "," reg:register { return {operation:op, operands: { d: toNumber(reg) }}; }
+
+type_two_mnemonic
+  = "LOAD"i
+  / "STOR"i
+  / "BRNP"i
+  / "BRNZ"i
+
+type_three_instruction
+  = _+ op:type_three_opcode _+ .* { error("Type 3 operations cannot have operands"); }
+  / _+ op:type_three_opcode _* { return op; }
+  / _+ "HALT"i { return {operation: "HALT"}; }
+
+type_three_opcode
+  = op:type_three_mnemonic "," reg:register { return {operation:op, operands: { d: toNumber(reg) }}; }
+
+type_three_mnemonic
+  = "JMPR"i
+  / "JMPL"i
 
 directive
   = org
