@@ -13,6 +13,14 @@
     return _.flatten(arr).join("").trim();
   }
 
+  function splitOpcode(op) {
+    return op.split(",");
+  }
+
+  function toNumber(val) {
+  return val[0].match(/[R$]/) ? toHex(val.slice(1)) : parseInt(val,10);
+  }
+
   function toHex(val) {
     return parseInt(val,16);
   }
@@ -25,12 +33,12 @@
   }
 
   function createOrg(lc) {
-    return _.extend({ directive: "ORG" },
-                    { operands: { address:lc }});
+    return _.extend({ operation: "ORG" },
+                    { operands: { address: toNumber(lc) }});
   }
 
   function createHex(data, label) {
-    return _.extend({},label, { directive: "HEX" },
+    return _.extend({},label, { operation: "HEX" },
                     { operands: {data: data }});
   }
 
@@ -77,8 +85,10 @@ comment
 
 instruction
   = _+ op:t1_opcode _+ s:register _+ t:register {
-    return { opcode: op,
-      operands: { s: up(s), t: up(t) }
+    var parts = splitOpcode(op);
+    var opcode = _.first(parts);
+    return { operation: opcode,
+      operands: { d: toNumber(_.last(parts)), s: toNumber(s), t: toNumber(t) }
     };
   }
 

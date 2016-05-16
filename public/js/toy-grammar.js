@@ -60,8 +60,10 @@ toyGrammar = (function() {
         peg$c21 = { type: "literal", value: ";", description: "\";\"" },
         peg$c22 = function(symbol, text) { return {comment: join(text) }; },
         peg$c23 = function(op, s, t) {
-            return { opcode: op,
-              operands: { s: up(s), t: up(t) }
+            var parts = splitOpcode(op);
+            var opcode = _.first(parts);
+            return { operation: opcode,
+              operands: { d: toNumber(_.last(parts)), s: toNumber(s), t: toNumber(t) }
             };
           },
         peg$c24 = "addr",
@@ -1546,6 +1548,14 @@ toyGrammar = (function() {
         return _.flatten(arr).join("").trim();
       }
 
+      function splitOpcode(op) {
+        return op.split(",");
+      }
+
+      function toNumber(val) {
+      return val[0].match(/[R$]/) ? toHex(val.slice(1)) : parseInt(val,10);
+      }
+
       function toHex(val) {
         return parseInt(val,16);
       }
@@ -1558,12 +1568,12 @@ toyGrammar = (function() {
       }
 
       function createOrg(lc) {
-        return _.extend({ directive: "ORG" },
-                        { operands: { address:lc }});
+        return _.extend({ operation: "ORG" },
+                        { operands: { address: toNumber(lc) }});
       }
 
       function createHex(data, label) {
-        return _.extend({},label, { directive: "HEX" },
+        return _.extend({},label, { operation: "HEX" },
                         { operands: {data: data }});
       }
 

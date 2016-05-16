@@ -45,13 +45,13 @@ describe('TOY assembly grammar', function() {
     it('@ macro', function() {
       var expected = [
         {
-          directive: "ORG",
-          operands: {address: "$10"},
+          operation: "ORG",
+          operands: {address: 0x10},
         }, {
           label: "FOO",
           comment: "stuff, and more"
         }, {
-          directive: "HEX",
+          operation: "HEX",
           operands: {data: [0x1234,0x5678]}
         }
       ];
@@ -61,7 +61,7 @@ describe('TOY assembly grammar', function() {
     it('@ macro will use current lc', function() {
       var expected = [
         {
-          directive: "HEX",
+          operation: "HEX",
           operands: {data: [0x1234,0x5678]}
         }
       ];
@@ -73,18 +73,18 @@ describe('TOY assembly grammar', function() {
     it('ORG directive', function() {
       var expected = {
         label: "FOO",
-        directive: "ORG",
-        operands: { address: "$10" },
+        operation: "ORG",
+        operands: { address: 10 },
         comment: "stuff, and more"
       };
 
-      var line = "foo ORG $10 ; stuff, and more";
+      var line = "foo ORG 10 ; stuff, and more";
       expect(toyGrammar.parse(line)).toEqual(expected);
     });
     it('HEX directive', function() {
       var expected = {
         label: "BAR",
-        directive: "HEX",
+        operation: "HEX",
         operands: { data: [0x1234,0x5678] },
         comment: "a different comment"
       };
@@ -93,11 +93,11 @@ describe('TOY assembly grammar', function() {
       expect(toyGrammar.parse(line)).toEqual(expected);
     });
     it('HEX directive spacing is free-form', function() {
-      var expected = { directive: "HEX", operands: { data: [0x1234,0x5678] }};
+      var expected = { operation: "HEX", operands: { data: [0x1234,0x5678] }};
       expect(toyGrammar.parse(" HEX 12345678")).toEqual(expected);
     });
     it('HEX directive can only contain numbers & spaces', function() {
-      var expected = { directive: "HEX", operands: { data: [0x1234,0x5678] }};
+      var expected = { operation: "HEX", operands: { data: [0x1234,0x5678] }};
       shouldThrow(" HEX 1234,5678","Invalid character: ',' in data.");
     });
   });
@@ -106,8 +106,8 @@ describe('TOY assembly grammar', function() {
       it('has four parts', function() {
         var expected = {
           label: "FOO",
-          opcode: "ADDR,R2",
-          operands: { s: "R3", t: "R4" },
+          operation: "ADDR",
+          operands: { d: 2, s: 3, t: 4 },
           comment: "stuff, and more"
         };
         var line = "foo ADDR,R2 R3 R4 ; stuff, and more";
@@ -115,8 +115,8 @@ describe('TOY assembly grammar', function() {
       });
       it('labels are optional', function() {
         var expected = {
-          opcode: "ADDR,R2",
-          operands: { s: "R3", t: "R4" },
+          operation: "ADDR",
+          operands: { d: 2, s: 3, t: 4 },
           comment: "stuff, and more"
         };
         var line = " ADDR,R2 R3 R4 ; stuff, and more";
@@ -125,15 +125,15 @@ describe('TOY assembly grammar', function() {
       it('comments are optional', function() {
         var expected = {
           label: "FOO",
-          opcode: "ADDR,R2",
-          operands: { s: "R3", t: "R4" },
+          operation: "ADDR",
+          operands: { d: 2, s: 3, t: 4 },
         };
         var line = "foo ADDR,R2 R3 R4";
         expect(toyGrammar.parse(line)).toEqual(expected);
       });
       it('can be just opcode and operand', function() {
-        var expected = { opcode: "ADDR,R2", operands: { s: "R3", t: "R4" }, };
-        var line = " ADDR,R2 R3 R4";
+        var expected = { operation: "ADDR", operands: { d: 2, s: 3, t: 0xC }, };
+        var line = " ADDR,R2 R3 RC";
         expect(toyGrammar.parse(line)).toEqual(expected);
       });
       it('must start with space if no label', function() {
@@ -142,8 +142,8 @@ describe('TOY assembly grammar', function() {
     });
     it('supported codes', function() {
       _.each(["ADDR","SUBR","ANDR","XORR","SHLR","SHRR"],function(mnemonic) {
-        var expected = { opcode: mnemonic + ",R2", operands: { s: "R3", t: "R4" }, };
-        var inst = " " + mnemonic + ",R2 R3 R4";
+        var expected = { operation: mnemonic, operands: { d: 0xF, s: 3, t: 4 }, };
+        var inst = " " + mnemonic + ",RF R3 R4";
 
         expect(toyGrammar.parse(inst)).toEqual(expected);
       });
