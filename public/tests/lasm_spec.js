@@ -18,5 +18,68 @@ describe('LMAS Assembler', function() {
     expect(lasm.assemble(code)).toEqual(binary);
     });
   });
+  describe('symbol table', function() {
+    it('for a single line', function() {
+      var code = lasm.prepare("foo LOAD,R2 $10\n");
+      expect(lasm.buildSymbols(code)).toEqual({
+        pc: 0,
+        symbols: {
+          FOO: 0
+      }});
+    });
+    it('for multiple lines', function() {
+      var code = lasm.prepare("foo LOAD,R2 $10\nBAR ADDR,R2 R3 R4");
+      expect(lasm.buildSymbols(code)).toEqual({
+        pc: 0,
+        symbols: {
+          FOO: 0,
+          BAR: 1
+      }});
+    });
+    it('for multiple lines including lines without labels', function() {
+      var code = lasm.prepare("foo LOAD,R3 #$41\n LOAD,R4 #$01\nBAR ADDR,R2 R3 R4");
+      expect(lasm.buildSymbols(code)).toEqual({
+        pc: 0,
+        symbols: {
+          FOO: 0,
+          BAR: 2
+      }});
+    });
+    it('for multiple labels in a row', function() {
+      var code = lasm.prepare("foo\nbar\n LOAD,R4 #$01");
+      expect(lasm.buildSymbols(code)).toEqual({
+        pc: 0,
+        symbols: {
+          FOO: 0,
+          BAR: 0
+      }});
+    });
+    it('adjusted by a midpoint ORG directive', function() {
+      var code = lasm.prepare("foo LOAD,R3 #$41\n LOAD,R4 #$01\n ORG $42\nBAR ADDR,R2 R3 R4");
+      expect(lasm.buildSymbols(code)).toEqual({
+        pc: 0,
+        symbols: {
+          FOO: 0,
+          BAR: 0x42
+      }});
+    });
+    it('adjusted by an initial ORG directive', function() {
+      var code = lasm.prepare(" ORG $42\nfoo LOAD,R3 #$41\n LOAD,R4 #$01\nBAR ADDR,R2 R3 R4");
+      expect(lasm.buildSymbols(code)).toEqual({
+        pc: 0x42,
+        symbols: {
+          FOO: 0x42,
+          BAR: 0x44
+      }});
+    });
+  });
+  describe('translate', function() {
+    xit('LOAD', function() {
+      expect(2).toEqual(1);
+    });
+    xit('ADDR', function() {
+      expect(2).toEqual(1);
+    });
+  });
 });
 

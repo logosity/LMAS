@@ -124,6 +124,7 @@ type_two_argument
   = result:value { return { value: toNumber(result) }; }
   / result:address { return { address: toNumber(result) }; }
   / result:register { return { register: toNumber(result) }; }
+  / result:label { return { address: result.label }; }
 
 type_two_opcode
   = op:type_two_mnemonic "," reg:register { return {operation:op, operands: { d: toNumber(reg) }}; }

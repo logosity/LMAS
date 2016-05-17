@@ -158,6 +158,10 @@ describe('TOY assembly grammar', function() {
         shouldThrow(" LOAD,RD", "Type 2 operations must have form XXXX,RX [#]address");
         shouldThrow(" LOAD,RD R1 R2", "Type 2 operations must have form XXXX,RX [#]address");
       });
+        it('can have a label as operand', function() {
+          var expected = { operation: "LOAD", operands: { d: 2, address: "FOO" }, };
+          expect(toyGrammar.parse(" LOAD,R2 foo")).toEqual(expected);
+        });
       describe('LOAD', function() {
         it('an immediate value', function() {
           var expected = { operation: "LOAD", operands: { d: 2, value: 0x10 }, };
