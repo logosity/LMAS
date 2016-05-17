@@ -107,7 +107,7 @@ describe('TOY assembly grammar', function() {
         var expected = {
           label: "FOO",
           operation: "ADDR",
-          operands: { d: 2, s: 3, t: 4 },
+          operands: { d: 0x200, s: 0x30, t: 4 },
           comment: "stuff, and more"
         };
         var line = "foo ADDR,R2 R3 R4 ; stuff, and more";
@@ -116,7 +116,7 @@ describe('TOY assembly grammar', function() {
       it('labels are optional', function() {
         var expected = {
           operation: "ADDR",
-          operands: { d: 2, s: 3, t: 4 },
+          operands: { d: 0x200, s: 0x30, t: 4 },
           comment: "stuff, and more"
         };
         var line = " ADDR,R2 R3 R4 ; stuff, and more";
@@ -126,13 +126,13 @@ describe('TOY assembly grammar', function() {
         var expected = {
           label: "FOO",
           operation: "ADDR",
-          operands: { d: 2, s: 3, t: 4 },
+          operands: { d: 0x200, s: 0x30, t: 4 },
         };
         var line = "foo ADDR,R2 R3 R4";
         expect(toyGrammar.parse(line)).toEqual(expected);
       });
       it('can be just opcode and operand', function() {
-        var expected = { operation: "ADDR", operands: { d: 2, s: 3, t: 0xC }, };
+        var expected = { operation: "ADDR", operands: { d: 0x200, s: 0x30, t: 0xC }, };
         expect(toyGrammar.parse(" ADDR,R2 R3 RC")).toEqual(expected);
       });
       it('must start with space if no label', function() {
@@ -145,7 +145,7 @@ describe('TOY assembly grammar', function() {
       });
       it('all supported codes have same format', function() {
         _.each(["ADDR","SUBR","ANDR","XORR","SHLR","SHRR"],function(mnemonic) {
-          var expected = { operation: mnemonic, operands: { d: 0xF, s: 3, t: 4 }, };
+          var expected = { operation: mnemonic, operands: { d: 0xF00, s: 0x30, t: 4 }, };
           var inst = " " + mnemonic + ",RF R3 R4";
 
           expect(toyGrammar.parse(inst)).toEqual(expected);
@@ -159,38 +159,38 @@ describe('TOY assembly grammar', function() {
         shouldThrow(" LOAD,RD R1 R2", "Type 2 operations must have form XXXX,RX [#]address");
       });
         it('can have a label as operand', function() {
-          var expected = { operation: "LOAD", operands: { d: 2, address: "FOO" }, };
+          var expected = { operation: "LOAD", operands: { d: 0x200, address: "FOO" }, };
           expect(toyGrammar.parse(" LOAD,R2 foo")).toEqual(expected);
         });
       describe('LOAD', function() {
         it('an immediate value', function() {
-          var expected = { operation: "LOAD", operands: { d: 2, value: 0x10 }, };
+          var expected = { operation: "LOAD", operands: { d: 0x200, value: 0x10 }, };
           expect(toyGrammar.parse(" LOAD,R2 #$10")).toEqual(expected);
         });
         it('from an address', function() {
-          var expected = { operation: "LOAD", operands: { d: 2, address: 0x10 }, };
+          var expected = { operation: "LOAD", operands: { d: 0x200, address: 0x10 }, };
           expect(toyGrammar.parse(" LOAD,R2 $10")).toEqual(expected);
         });
         it('from an address pointed to by a register', function() {
-          var expected = { operation: "LOAD", operands: { d: 2, register: 0xC }, };
+          var expected = { operation: "LOAD", operands: { d: 0x200, register: 0xC }, };
           expect(toyGrammar.parse(" LOAD,R2 RC")).toEqual(expected);
         });
       });
       it('BRNP (BRaNch if register is Positive)', function() {
-        var expected = { operation: "BRNP", operands: { d: 2, address: 0x1C }, };
+        var expected = { operation: "BRNP", operands: { d: 0x200, address: 0x1C }, };
         expect(toyGrammar.parse(" BRNP,R2 $1C")).toEqual(expected);
       });
       it('BRNZ (BRaNch if register is Zero)', function() {
-        var expected = { operation: "BRNZ", operands: { d: 0xD, address: 0x1C }, };
+        var expected = { operation: "BRNZ", operands: { d: 0xD00, address: 0x1C }, };
         expect(toyGrammar.parse(" BRNZ,RD $1C")).toEqual(expected);
       });
       describe('STOR', function() {
         it('to an address', function() {
-          var expected = { operation: "STOR", operands: { d: 2, address: 0x10 }, };
+          var expected = { operation: "STOR", operands: { d: 0x200, address: 0x10 }, };
           expect(toyGrammar.parse(" STOR,R2 $10")).toEqual(expected);
         });
         it('to an address pointed to by a register', function() {
-          var expected = { operation: "STOR", operands: { d: 2, register: 0xC }, };
+          var expected = { operation: "STOR", operands: { d: 0x200, register: 0xC }, };
           expect(toyGrammar.parse(" STOR,R2 RC")).toEqual(expected);
         });
       });
@@ -203,11 +203,11 @@ describe('TOY assembly grammar', function() {
         expect(toyGrammar.parse(" HALT")).toEqual({ operation: "HALT" });
       });
       it('JMPR (JuMP to address pointed to by Register)', function() {
-        var expected = { operation: "JMPR", operands: { d: 0xD }, };
+        var expected = { operation: "JMPR", operands: { d: 0xD00 }, };
         expect(toyGrammar.parse(" JMPR,RD")).toEqual(expected);
       });
       it('JMPL (JuMP to address pointed to by register and Link (put PC into register))', function() {
-        var expected = { operation: "JMPL", operands: { d: 0xD }, };
+        var expected = { operation: "JMPL", operands: { d: 0xD00 }, };
         expect(toyGrammar.parse(" JMPL,RD")).toEqual(expected);
       });
     });

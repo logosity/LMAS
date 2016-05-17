@@ -17,6 +17,14 @@
     return op.split(",");
   }
 
+  function dRegisterShift(val) {
+    return toNumber(val) << 8;
+  }
+
+  function sRegisterShift(val) {
+    return toNumber(val) << 4;
+  }
+
   function toNumber(val) {
   return val[0].match(/[R$]/) ? toHex(val.slice(1)) : parseInt(val,10);
   }
@@ -94,13 +102,13 @@ type_one_instruction
   = _+ op:type_one_opcode _+ s:register _+ t:register {
     return { 
       operation: op.operation, 
-      operands: _.extend(op.operands, {s: toNumber(s), t: toNumber(t) })
+      operands: _.extend(op.operands, {s: sRegisterShift(s), t: toNumber(t) })
     };
   }
   / _+ op:type_one_opcode .* { error("Type 1 operations must have form XXXX,RX RX RX"); }
 
 type_one_opcode
-  = op:type_one_mnemonic "," reg:register { return {operation:op, operands: { d: toNumber(reg) }}; }
+  = op:type_one_mnemonic "," reg:register { return {operation:op, operands: { d: dRegisterShift(reg) }}; }
 
 type_one_mnemonic
   = "ADDR"i
@@ -127,7 +135,7 @@ type_two_argument
   / result:label { return { address: result.label }; }
 
 type_two_opcode
-  = op:type_two_mnemonic "," reg:register { return {operation:op, operands: { d: toNumber(reg) }}; }
+  = op:type_two_mnemonic "," reg:register { return {operation:op, operands: { d: dRegisterShift(reg) }}; }
 
 type_two_mnemonic
   = "LOAD"i
@@ -141,7 +149,7 @@ type_three_instruction
   / _+ "HALT"i { return {operation: "HALT"}; }
 
 type_three_opcode
-  = op:type_three_mnemonic "," reg:register { return {operation:op, operands: { d: toNumber(reg) }}; }
+  = op:type_three_mnemonic "," reg:register { return {operation:op, operands: { d: dRegisterShift(reg) }}; }
 
 type_three_mnemonic
   = "JMPR"i

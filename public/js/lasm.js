@@ -24,13 +24,25 @@ lasm.opcodeTable = {
   LOAD: {
     length: function(data) { return 1; },
     translate: function(op, code) {
-      return code.push(0x1234);
+      if(op.operands.value) {
+        code.push(0x7000 | op.operands.d | op.operands.value);
+      } else if(op.operands.address) {
+        code.push(0x8000 | op.operands.d | op.operands.address);
+      } else if(op.operands.register) {
+        code.push(0xA000 | op.operands.d | op.operands.register);
+      } else {
+        //parser should never allow this to happen, but...
+        throw new Error("Invalid LOAD operation.");
+      }
+
+      return code;
     }
   },
   ADDR: {
     length: function(data) { return 1; },
     translate: function(op, code) {
-      return code.push(0x1234);
+      code.push(0x1000 | op.operands.d | op.operands.s | op.operands.t);
+      return code;
     }
   }
 };

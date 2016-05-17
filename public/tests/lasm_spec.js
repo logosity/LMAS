@@ -74,11 +74,27 @@ describe('LMAS Assembler', function() {
     });
   });
   describe('translate', function() {
-    xit('LOAD', function() {
-      expect(2).toEqual(1);
+    describe('LOAD', function() {
+      it('from literal value', function() {
+        var code = ' LOAD,R2 #$80';
+        var binary = Uint16Array.from([0,0,0x7280]);
+        expect(lasm.assemble(code)).toEqual(binary);
+      });
+      it('from address', function() {
+        var code = ' LOAD,R2 $80';
+        var binary = Uint16Array.from([0,0,0x8280]);
+        expect(lasm.assemble(code)).toEqual(binary);
+      });
+      it('from address pointed to by register', function() {
+        var code = ' LOAD,R2 RF';
+        var binary = Uint16Array.from([0,0,0xA20F]);
+        expect(lasm.assemble(code)).toEqual(binary);
+      });
     });
-    xit('ADDR', function() {
-      expect(2).toEqual(1);
+    it('ADDR', function() {
+      var code = ' ADDR,R2 R3 R4';
+      var binary = Uint16Array.from([0,0,0x1234]);
+      expect(lasm.assemble(code)).toEqual(binary);
     });
   });
 });

@@ -65,11 +65,11 @@ toyGrammar = (function() {
         peg$c26 = function(op, s, t) {
             return { 
               operation: op.operation, 
-              operands: _.extend(op.operands, {s: toNumber(s), t: toNumber(t) })
+              operands: _.extend(op.operands, {s: sRegisterShift(s), t: toNumber(t) })
             };
           },
         peg$c27 = function(op) { error("Type 1 operations must have form XXXX,RX RX RX"); },
-        peg$c28 = function(op, reg) { return {operation:op, operands: { d: toNumber(reg) }}; },
+        peg$c28 = function(op, reg) { return {operation:op, operands: { d: dRegisterShift(reg) }}; },
         peg$c29 = "addr",
         peg$c30 = { type: "literal", value: "ADDR", description: "\"ADDR\"" },
         peg$c31 = "subr",
@@ -2262,6 +2262,14 @@ toyGrammar = (function() {
 
       function splitOpcode(op) {
         return op.split(",");
+      }
+
+      function dRegisterShift(val) {
+        return toNumber(val) << 8;
+      }
+
+      function sRegisterShift(val) {
+        return toNumber(val) << 4;
       }
 
       function toNumber(val) {
