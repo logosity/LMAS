@@ -79,6 +79,41 @@ describe('LMAS Assembler', function() {
     });
   });
   describe('translate', function() {
+    it('ADDR (ADD Register)', function() {
+      var code = ' ADDR,R2 R3 R4';
+      var binary = Uint16Array.from([0,0,0x1234]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('ANDR (AND Registers)', function() {
+      var code = ' ANDR,R2 R3 R4';
+      var binary = Uint16Array.from([0,0,0x3234]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('BRNP (BRaNch if Positive)', function() {
+      var code = 'FOO EQU $42\n BRNP,R2 $80\n BRNP,R2 FOO\n';
+      var binary = Uint16Array.from([0,0,0xD280,0xD242]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('BRNZ (BRaNch if Zero)', function() {
+      var code = 'FOO EQU $42\n BRNZ,R2 $80\n BRNZ,R2 FOO\n';
+      var binary = Uint16Array.from([0,0,0xC280,0xC242]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('HALT', function() {
+      var code = ' HALT';
+      var binary = Uint16Array.from([0,0,0]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('JMPL (JuMP and Link register)', function() {
+      var code = ' JMPL,R2\n';
+      var binary = Uint16Array.from([0,0,0xF200]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('JMPR (JuMP Register)', function() {
+      var code = ' JMPR,R2\n';
+      var binary = Uint16Array.from([0,0,0xE200]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
     describe('LOAD', function() {
       it('from literal value', function() {
         var code = ' LOAD,R2 #$80';
@@ -101,24 +136,14 @@ describe('LMAS Assembler', function() {
         expect(lasm.assemble(code)).toEqual(binary);
       });
     });
-    it('ADDR', function() {
-      var code = ' ADDR,R2 R3 R4';
-      var binary = Uint16Array.from([0,0,0x1234]);
+    it('SHLR (SHift Left Register)', function() {
+      var code = ' SHLR,R2 R3 R4';
+      var binary = Uint16Array.from([0,0,0x5234]);
       expect(lasm.assemble(code)).toEqual(binary);
     });
-    it('BRNP', function() {
-      var code = 'FOO EQU $42\n BRNP,R2 $80\n BRNP,R2 FOO\n';
-      var binary = Uint16Array.from([0,0,0xD280,0xD242]);
-      expect(lasm.assemble(code)).toEqual(binary);
-    });
-    it('BRNZ', function() {
-      var code = 'FOO EQU $42\n BRNZ,R2 $80\n BRNZ,R2 FOO\n';
-      var binary = Uint16Array.from([0,0,0xC280,0xC242]);
-      expect(lasm.assemble(code)).toEqual(binary);
-    });
-    it('HALT', function() {
-      var code = ' HALT';
-      var binary = Uint16Array.from([0,0,0]);
+    it('SHRR (SHift Right Register)', function() {
+      var code = ' SHRR,R2 R3 R4';
+      var binary = Uint16Array.from([0,0,0x6234]);
       expect(lasm.assemble(code)).toEqual(binary);
     });
     it('STOR', function() {
@@ -126,9 +151,14 @@ describe('LMAS Assembler', function() {
       var binary = Uint16Array.from([0,0,0xB203,0x9280,0x9242]);
       expect(lasm.assemble(code)).toEqual(binary);
     });
-    it('SUBR', function() {
+    it('SUBR (SUBtract Register)', function() {
       var code = ' SUBR,R2 R3 R4';
       var binary = Uint16Array.from([0,0,0x2234]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('XORR (eXlusive OR Registers)', function() {
+      var code = ' XORR,R2 R3 R4';
+      var binary = Uint16Array.from([0,0,0x4234]);
       expect(lasm.assemble(code)).toEqual(binary);
     });
   });

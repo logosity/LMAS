@@ -6,143 +6,163 @@ lasm.prepare = function(code) {
   }));
 };
 
-lasm.opcodeTable = {
-  ORG: {
-    symbols: function(opdata,result) { 
-      if(opdata.lineNumber === 0) {
-        result.pc = opdata.operands.address;
+lasm.opcodeTable = function() {
+  var type1 = function(instruction) {
+    return {
+      symbols: function(opdata, result) { 
+        result.lc += 1; 
+        return result;
+      },
+      translate: function(op, code) {
+        code.push(instruction | op.operands.d | op.operands.s | op.operands.t);
+        return code;
       }
-      result.lc = opdata.operands.address;
-      return result;
+    };
+  };
+  return {
+    ADDR: type1(0x1000),
+    SUBR: type1(0x2000),
+    ANDR: type1(0x3000),
+    XORR: type1(0x4000),
+    SHLR: type1(0x5000),
+    SHRR: type1(0x6000),
+    ORG: {
+      symbols: function(opdata,result) { 
+        if(opdata.lineNumber === 0) {
+          result.pc = opdata.operands.address;
+        }
+        result.lc = opdata.operands.address;
+        return result;
+      },
+      translate: function(op, code) {
+        return code;
+      },
     },
-    translate: function(op, code) {
-      return code;
-    },
-  },
-  HEX: {
-    symbols: function(opdata,result) {
-      result.lc += opdata.operands.data.length;
-      return result;
-    },
-    translate: function(op, code) {
-      return code.concat(op.operands.data);
-    }
-  },
-  EQU: {
-    symbols: function(opdata,result) {
-      result.symbols[opdata.operands.label] = opdata.operands.value;
-      return result;
-    },
-    translate: function(op, code) {
-      return code;
-    }
-  },
-  BRNZ: {
-    symbols: function(opdata,result) { 
-      result.lc += 1; 
-      return result;
-    },
-    translate: function(op, code, lookup) { 
-      if(op.operands.address) {
-        code.push(0xC000 | op.operands.d | op.operands.address);
-      } else if(op.operands.label) {
-        code.push(0xC000 | op.operands.d | lookup(op.operands.label));
-      } else {
-        //parser should never allow this to happen, but...
-        throw new Error("Invalid BRNZ operation.");
+    HEX: {
+      symbols: function(opdata,result) {
+        result.lc += opdata.operands.data.length;
+        return result;
+      },
+      translate: function(op, code) {
+        return code.concat(op.operands.data);
       }
-      return code;
-    }
-  },
-  BRNP: {
-    symbols: function(opdata,result) { 
-      result.lc += 1; 
-      return result;
     },
-    translate: function(op, code, lookup) { 
-      if(op.operands.address) {
-        code.push(0xD000 | op.operands.d | op.operands.address);
-      } else if(op.operands.label) {
-        code.push(0xD000 | op.operands.d | lookup(op.operands.label));
-      } else {
-        //parser should never allow this to happen, but...
-        throw new Error("Invalid BRNP operation.");
+    EQU: {
+      symbols: function(opdata,result) {
+        result.symbols[opdata.operands.label] = opdata.operands.value;
+        return result;
+      },
+      translate: function(op, code) {
+        return code;
       }
-      return code;
-    }
-  },
-  HALT: {
-    symbols: function(opdata,result) { 
-      result.lc += 1; 
-      return result;
     },
-    translate: function(op, code, lookup) { 
-      code.push(0);
-      return code; }
-  },
-  ADDR: {
-    symbols: function(opdata, result) { 
-      result.lc += 1; 
-      return result;
-    },
-    translate: function(op, code) {
-      code.push(0x1000 | op.operands.d | op.operands.s | op.operands.t);
-      return code;
-    }
-  },
-  LOAD: {
-    symbols: function(opdata,result) { 
-      result.lc += 1; 
-      return result;
-    },
-    translate: function(op, code, lookup) {
-      if(op.operands.value) {
-        code.push(0x7000 | op.operands.d | op.operands.value);
-      } else if(op.operands.address) {
-        code.push(0x8000 | op.operands.d | op.operands.address);
-      } else if(op.operands.label) {
-        code.push(0x8000 | op.operands.d | lookup(op.operands.label));
-      } else if(op.operands.register) {
-        code.push(0xA000 | op.operands.d | op.operands.register);
-      } else {
-        //parser should never allow this to happen, but...
-        throw new Error("Invalid LOAD operation.");
+    BRNZ: {
+      symbols: function(opdata,result) { 
+        result.lc += 1; 
+        return result;
+      },
+      translate: function(op, code, lookup) { 
+        if(op.operands.address) {
+          code.push(0xC000 | op.operands.d | op.operands.address);
+        } else if(op.operands.label) {
+          code.push(0xC000 | op.operands.d | lookup(op.operands.label));
+        } else {
+          //parser should never allow this to happen, but...
+          throw new Error("Invalid BRNZ operation.");
+        }
+        return code;
       }
+    },
+    BRNP: {
+      symbols: function(opdata,result) { 
+        result.lc += 1; 
+        return result;
+      },
+      translate: function(op, code, lookup) { 
+        if(op.operands.address) {
+          code.push(0xD000 | op.operands.d | op.operands.address);
+        } else if(op.operands.label) {
+          code.push(0xD000 | op.operands.d | lookup(op.operands.label));
+        } else {
+          //parser should never allow this to happen, but...
+          throw new Error("Invalid BRNP operation.");
+        }
+        return code;
+      }
+    },
+    HALT: {
+      symbols: function(opdata,result) { 
+        result.lc += 1; 
+        return result;
+      },
+      translate: function(op, code, lookup) { 
+        code.push(0);
+        return code; }
+    },
+    LOAD: {
+      symbols: function(opdata,result) { 
+        result.lc += 1; 
+        return result;
+      },
+      translate: function(op, code, lookup) {
+        if(op.operands.value) {
+          code.push(0x7000 | op.operands.d | op.operands.value);
+        } else if(op.operands.address) {
+          code.push(0x8000 | op.operands.d | op.operands.address);
+        } else if(op.operands.label) {
+          code.push(0x8000 | op.operands.d | lookup(op.operands.label));
+        } else if(op.operands.register) {
+          code.push(0xA000 | op.operands.d | op.operands.register);
+        } else {
+          //parser should never allow this to happen, but...
+          throw new Error("Invalid LOAD operation.");
+        }
 
-      return code;
-    }
-  },
-  STOR: {
-    symbols: function(opdata,result) { 
-      result.lc += 1; 
-      return result;
-    },
-    translate: function(op, code, lookup) {
-      if(op.operands.address) {
-        code.push(0x9000 | op.operands.d | op.operands.address);
-      } else if(op.operands.label) {
-        code.push(0x9000 | op.operands.d | lookup(op.operands.label));
-      } else if(op.operands.register) {
-        code.push(0xB000 | op.operands.d | op.operands.register);
-      } else {
-        //parser should never allow this to happen, but...
-        throw new Error("Invalid STOR operation.");
+        return code;
       }
-
-      return code;
-    }
-  },
-  SUBR: {
-    symbols: function(opdata, result) { 
-      result.lc += 1; 
-      return result;
     },
-    translate: function(op, code) {
-      code.push(0x2000 | op.operands.d | op.operands.s | op.operands.t);
-      return code;
-    }
-  }
-};
+    STOR: {
+      symbols: function(opdata,result) { 
+        result.lc += 1; 
+        return result;
+      },
+      translate: function(op, code, lookup) {
+        if(op.operands.address) {
+          code.push(0x9000 | op.operands.d | op.operands.address);
+        } else if(op.operands.label) {
+          code.push(0x9000 | op.operands.d | lookup(op.operands.label));
+        } else if(op.operands.register) {
+          code.push(0xB000 | op.operands.d | op.operands.register);
+        } else {
+          //parser should never allow this to happen, but...
+          throw new Error("Invalid STOR operation.");
+        }
+
+        return code;
+      }
+    },
+    JMPR: {
+      symbols: function(opdata, result) { 
+        result.lc += 1; 
+        return result;
+      },
+      translate: function(op, code) {
+        code.push(0xE000 | op.operands.d);
+        return code;
+      }
+    },
+    JMPL: {
+      symbols: function(opdata, result) { 
+        result.lc += 1; 
+        return result;
+      },
+      translate: function(op, code) {
+        code.push(0xF000 | op.operands.d);
+        return code;
+      }
+    },
+  };
+}();
 lasm.assemble = function(code) {
   var lines =  lasm.prepare(code);
   var firstPass = lasm.buildSymbols(lines);
