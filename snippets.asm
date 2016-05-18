@@ -6,8 +6,10 @@
   @$42     720A 7301 2223 d212 79ff
 
       ORG $42
+IO    EQU $FF
       LOAD,R2 #$0A
       LOAD,R3 #$01
 LOOP  SUBR,R2 R2 R3
       BRNP,R2 LOOP
-      LOAD,R9 #$FF
+      LOAD,R9 #$44
+      STOR,R9 IO

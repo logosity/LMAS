@@ -106,16 +106,6 @@ describe('LMAS Assembler', function() {
       var binary = Uint16Array.from([0,0,0x1234]);
       expect(lasm.assemble(code)).toEqual(binary);
     });
-    it('SUBR', function() {
-      var code = ' SUBR,R2 R3 R4';
-      var binary = Uint16Array.from([0,0,0x2234]);
-      expect(lasm.assemble(code)).toEqual(binary);
-    });
-    it('HALT', function() {
-      var code = ' HALT';
-      var binary = Uint16Array.from([0,0,0]);
-      expect(lasm.assemble(code)).toEqual(binary);
-    });
     it('BRNP', function() {
       var code = 'FOO EQU $42\n BRNP,R2 $80\n BRNP,R2 FOO\n';
       var binary = Uint16Array.from([0,0,0xD280,0xD242]);
@@ -124,6 +114,21 @@ describe('LMAS Assembler', function() {
     it('BRNZ', function() {
       var code = 'FOO EQU $42\n BRNZ,R2 $80\n BRNZ,R2 FOO\n';
       var binary = Uint16Array.from([0,0,0xC280,0xC242]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('HALT', function() {
+      var code = ' HALT';
+      var binary = Uint16Array.from([0,0,0]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('STOR', function() {
+      var code = 'FOO EQU $42\n STOR,R2 R3\n STOR,R2 $80\n STOR,R2 FOO\n';
+      var binary = Uint16Array.from([0,0,0xB203,0x9280,0x9242]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('SUBR', function() {
+      var code = ' SUBR,R2 R3 R4';
+      var binary = Uint16Array.from([0,0,0x2234]);
       expect(lasm.assemble(code)).toEqual(binary);
     });
   });

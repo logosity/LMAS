@@ -80,6 +80,16 @@ lasm.opcodeTable = {
       code.push(0);
       return code; }
   },
+  ADDR: {
+    symbols: function(opdata, result) { 
+      result.lc += 1; 
+      return result;
+    },
+    translate: function(op, code) {
+      code.push(0x1000 | op.operands.d | op.operands.s | op.operands.t);
+      return code;
+    }
+  },
   LOAD: {
     symbols: function(opdata,result) { 
       result.lc += 1; 
@@ -102,13 +112,23 @@ lasm.opcodeTable = {
       return code;
     }
   },
-  ADDR: {
-    symbols: function(opdata, result) { 
+  STOR: {
+    symbols: function(opdata,result) { 
       result.lc += 1; 
       return result;
     },
-    translate: function(op, code) {
-      code.push(0x1000 | op.operands.d | op.operands.s | op.operands.t);
+    translate: function(op, code, lookup) {
+      if(op.operands.address) {
+        code.push(0x9000 | op.operands.d | op.operands.address);
+      } else if(op.operands.label) {
+        code.push(0x9000 | op.operands.d | lookup(op.operands.label));
+      } else if(op.operands.register) {
+        code.push(0xB000 | op.operands.d | op.operands.register);
+      } else {
+        //parser should never allow this to happen, but...
+        throw new Error("Invalid STOR operation.");
+      }
+
       return code;
     }
   },
