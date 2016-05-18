@@ -50,6 +50,13 @@
                     { operands: {data: data }});
   }
 
+  function createEqu(label, val) {
+    return {
+      operation: "EQU", 
+      operands: _.extend(label, { value: val })
+    };
+  }
+
   function invalidLabel(line) {
     error("Invalid label character. (missing initial whitespace?)");
   }
@@ -132,7 +139,7 @@ type_two_argument
   = result:value { return { value: toNumber(result) }; }
   / result:address { return { address: toNumber(result) }; }
   / result:register { return { register: toNumber(result) }; }
-  / result:label { return { address: result.label }; }
+  / result:label { return { label: result.label }; }
 
 type_two_opcode
   = op:type_two_mnemonic "," reg:register { return {operation:op, operands: { d: dRegisterShift(reg) }}; }
@@ -159,10 +166,15 @@ directive
   = org
   / hex
 
+equ_directive
+  = _+ "EQU"i _+ val:value { return toNumber(val); }
+  / _+ "EQU"i _+ addr:address { return toNumber(addr); }
+
 org
   = _+ "ORG"i _+ addr:address { return createOrg(addr); }
 hex
   = _+ "HEX"i data:hexDataArray { return createHex(data); }
+
 
 hexData
   = val:([0-9a-f ]i) { return up(val); }
@@ -194,10 +206,18 @@ line
   / text:label dir:directive {
     return _.extend({}, text, dir);
   }
+  / text:label equ:equ_directive comm:comment{
+    return _.extend(createEqu(text,equ),comm);
+  }
+  / text:label equ:equ_directive {
+    return createEqu(text,equ);
+  }
   / dir:directive comm:comment {
     return _.extend({}, dir, comm);
   }
   / dir:directive { return dir ; }
+
+  / equ_directive { error("LABEL required for EQU directive."); }
 
   / text:label inst:instruction comm:comment {
     return _.extend({}, text, inst, comm);

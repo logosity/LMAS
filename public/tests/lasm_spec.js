@@ -19,6 +19,11 @@ describe('LMAS Assembler', function() {
     });
   });
   describe('symbol table', function() {
+    it('for an EQU directive', function() {
+      var code = lasm.prepare("IO EQU $42\n");
+      var symbols = lasm.buildSymbols(code).symbols;
+      expect(symbols).toEqual({ IO: 0x42 }); 
+    });
     it('for a single line', function() {
       var code = lasm.prepare("foo LOAD,R2 $10\n");
       expect(lasm.buildSymbols(code)).toEqual({
@@ -85,6 +90,11 @@ describe('LMAS Assembler', function() {
         var binary = Uint16Array.from([0,0,0x8280]);
         expect(lasm.assemble(code)).toEqual(binary);
       });
+      it('from address label', function() {
+        var code = 'IO EQU $FF\n LOAD,R2 IO';
+        var binary = Uint16Array.from([0,0,0x82FF]);
+        expect(lasm.assemble(code)).toEqual(binary);
+      });
       it('from address pointed to by register', function() {
         var code = ' LOAD,R2 RF';
         var binary = Uint16Array.from([0,0,0xA20F]);
@@ -94,6 +104,26 @@ describe('LMAS Assembler', function() {
     it('ADDR', function() {
       var code = ' ADDR,R2 R3 R4';
       var binary = Uint16Array.from([0,0,0x1234]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('SUBR', function() {
+      var code = ' SUBR,R2 R3 R4';
+      var binary = Uint16Array.from([0,0,0x2234]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('HALT', function() {
+      var code = ' HALT';
+      var binary = Uint16Array.from([0,0,0]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('BRNP', function() {
+      var code = 'FOO EQU $42\n BRNP,R2 $80\n BRNP,R2 FOO\n';
+      var binary = Uint16Array.from([0,0,0xD280,0xD242]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('BRNZ', function() {
+      var code = 'FOO EQU $42\n BRNZ,R2 $80\n BRNZ,R2 FOO\n';
+      var binary = Uint16Array.from([0,0,0xC280,0xC242]);
       expect(lasm.assemble(code)).toEqual(binary);
     });
   });

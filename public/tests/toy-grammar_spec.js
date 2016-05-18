@@ -100,6 +100,35 @@ describe('TOY assembly grammar', function() {
       var expected = { operation: "HEX", operands: { data: [0x1234,0x5678] }};
       shouldThrow(" HEX 1234,5678","Invalid character: ',' in data.");
     });
+    it('EQU directive from literal', function() {
+      var expected = {
+        operation: "EQU",
+        operands: { label: "IO", value: 0xFF }
+      };
+
+      expect(toyGrammar.parse( "IO EQU #$FF")).toEqual(expected);
+    });
+
+    it('EQU directive from address', function() {
+      var expected = {
+        operation: "EQU",
+        operands: { label: "IO", value: 0xFF }
+      };
+
+      expect(toyGrammar.parse( "io equ $FF")).toEqual(expected);
+    });
+    it('EQU directive can have comment', function() {
+      var expected = {
+        operation: "EQU",
+        operands: { label: "IO", value: 0xFF },
+        comment: "a comment"
+      };
+      var line =  "io equ $FF ; a comment";
+      expect(toyGrammar.parse(line)).toEqual(expected);
+    });
+    it('EQU directive must have label', function() {
+      shouldThrow(" equ $42", "LABEL required for EQU directive.");
+    });
   });
   describe('instructions', function() {
     describe('overall structure', function() {
@@ -159,7 +188,7 @@ describe('TOY assembly grammar', function() {
         shouldThrow(" LOAD,RD R1 R2", "Type 2 operations must have form XXXX,RX [#]address");
       });
         it('can have a label as operand', function() {
-          var expected = { operation: "LOAD", operands: { d: 0x200, address: "FOO" }, };
+          var expected = { operation: "LOAD", operands: { d: 0x200, label: "FOO" }, };
           expect(toyGrammar.parse(" LOAD,R2 foo")).toEqual(expected);
         });
       describe('LOAD', function() {
