@@ -157,12 +157,37 @@ toy.util.fns.pc = function(obj) {
   };
 };
 
-toy.util.fns.setAll = function(obj) {
-  return function(arr, offset, eventType) {
+toy.util.fns.setRegister = function(obj) {
+    return function(reg,val) {
+    if(reg === 0) {
+      //do nothing
+    } else {
+      var newValue = val & 0xFFFF;
+      obj.handleEvent("registerChange",{address: reg, value: newValue});
+      obj[toy.util.offsets.REG + reg] = newValue;
+    }
+  };
+};
+
+toy.util.fns.setRegisters = function(obj) {
+  return function(arr) {
     _.each(arr, function(value, idx) {
-      var newValue = value & 0xFFFF;
-      obj.handleEvent(eventType,{address: idx, value: newValue});
-      obj[offset + idx] = newValue;
+      obj.setRegister(idx,value);
+    });
+  };
+};
+toy.util.fns.setMemory = function(obj) {
+    return function(loc,val) {
+    var newValue = val & 0xFFFF;
+    obj.handleEvent("memoryChange",{address: loc, value: newValue});
+    obj[toy.util.offsets.RAM + loc] = newValue;
+  };
+};
+
+toy.util.fns.setMemoryExtent = function(obj) {
+  return function(arr) {
+    _.each(arr, function(value, idx) {
+      obj.setMemory(idx,value);
     });
   };
 };
@@ -176,11 +201,9 @@ toy.util.fns.registers = function(obj) {
       if(typeof register === "number") {
         return obj[toy.util.offsets.REG + register];
       }
-      return obj.setAll(register,toy.util.offsets.REG,"registerChange");
+      return obj.setRegisters(register);
     case 2:
-      var newValue = value & 0xFFFF;
-      obj.handleEvent("registerChange",{address: register, value: newValue});
-      obj[toy.util.offsets.REG + register] = value;
+      obj.setRegister(register,value);
       break;
     default:
       throw {name:"arguments", message: "too many arguments"};
@@ -197,11 +220,9 @@ toy.util.fns.ram = function(obj) {
       if(typeof address === "number") {
         return obj[toy.util.offsets.RAM + address];
       }
-      return obj.setAll(address,toy.util.offsets.RAM,"memoryChange");
+      return obj.setMemoryExtent(address);
     case 2:
-      var newValue = value & 0xFFFF;
-      obj.handleEvent("memoryChange",{address: address, value: newValue});
-      obj[toy.util.offsets.RAM + address] = value;
+      obj.setMemory(address,value);
       break;
     default:
       throw {name:"arguments", message: "too many arguments"};

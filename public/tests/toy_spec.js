@@ -202,7 +202,7 @@ describe('TOY machine', function() {
         });
         it('changes to all registers', function() {
           bytes.registers([0x10000,1,2,3,4,5,6,7,8,9,0xa,0xb,0xc,0xd,0xe,0xf]);
-          _.each(_.range(16), function(register) {
+          _.each(_.range(1,16), function(register) {
             expect(handlers.registerChange).toHaveBeenCalledWith({address: register,value: register});
           });
         });
@@ -232,7 +232,7 @@ describe('TOY machine', function() {
             bytes.disableCallbacks();
             bytes.enableCallbacks();
             bytes.pc(0x10);
-            bytes.registers(0,0x42);
+            bytes.registers(1,0x42);
             bytes.ram(0,0x42);
             expect(handlers.pcChange).toHaveBeenCalled();
             expect(handlers.registerChange).toHaveBeenCalled();
@@ -296,6 +296,10 @@ describe('TOY machine', function() {
         it('16-bit overflow', function() {
           bytes.registers(2,0x10000);
           expect(bytes.registers(2)).toEqual(0x00);
+        });
+        it('register zero is always zero', function() {
+          bytes.registers(0,0x42);
+          expect(bytes.registers(0)).toEqual(0x00);
         });
       });
       describe('RAM manipulation', function() {

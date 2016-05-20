@@ -3,4 +3,5 @@
 # ls -d grammar/* | entr bin/update-grammar
 
 pegjs --cache -e toyGrammar grammar/toy.pegjs public/js/toy-grammar.js
+pegjs --cache -e testGrammar grammar/test.pegjs public/js/test-grammar.js
 
