@@ -47,3 +47,7 @@ MSG @         720A 7301 2223 d212 79ff  ; i.e. ORG <LC> \n HEX ...
           ASCII  "Hello World!"    ; produces HEX line as above minus the 00 
           ASCIIZ "Hello World!"    ; produces HEX line as above including the 00
 
+
+; cases that need to be tested
+disallowing labels with same name as the registers (R1 RC, etc)
+allowing alphanumeric labels

@@ -160,7 +160,7 @@ toy.util.fns.pc = function(obj) {
 toy.util.fns.setRegister = function(obj) {
     return function(reg,val) {
     if(reg === 0) {
-      //do nothing
+      obj.handleEvent("registerChange",{address: 0, value: 0});
     } else {
       var newValue = val & 0xFFFF;
       obj.handleEvent("registerChange",{address: reg, value: newValue});

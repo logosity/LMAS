@@ -68,6 +68,13 @@ describe('TOY machine', function() {
       toyObj.reset();
       expect(handlers.reset).toHaveBeenCalledWith({pc:0});
     });
+    it('register zero is updated on on reset', function() {
+      var handlers = { registerChange: function() {} };
+      spyOn(handlers,"registerChange");
+      var toyObj = toy.create(handlers);
+      toyObj.reset();
+      expect(handlers.registerChange).toHaveBeenCalledWith({address: 0, value: 0});
+    });
     it('raises an event on load', function() {
       var handlers = { load: function() {} };
       spyOn(handlers,"load");

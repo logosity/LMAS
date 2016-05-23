@@ -181,16 +181,20 @@ describe('TOY assembly grammar', function() {
         });
       });
     });
-    //["LOAD","STOR","BRNZ","BRNP","JMPR","JMPL"]
+
     describe('type 2', function() {
       it('must have an address or a value as operands', function() {
-        shouldThrow(" LOAD,RD", "Type 2 operations must have form XXXX,RX [#]address");
-        shouldThrow(" LOAD,RD R1 R2", "Type 2 operations must have form XXXX,RX [#]address");
+        shouldThrow(" LOAD,RD", "Type 2 operations must have form XXXX,RX register|address|value");
+        shouldThrow(" LOAD,RD R1 R2", "Type 2 operations must have form XXXX,RX register|address|value");
       });
-        it('can have a label as operand', function() {
-          var expected = { operation: "LOAD", operands: { d: 0x200, label: "FOO" }, };
-          expect(toyGrammar.parse(" LOAD,R2 foo")).toEqual(expected);
-        });
+      it('can have a label as operand', function() {
+        var expected = { operation: "LOAD", operands: { d: 0x200, label: "FOO" }, };
+        expect(toyGrammar.parse(" LOAD,R2 foo")).toEqual(expected);
+    });
+      it('BRN instructions do not accept registers', function() {
+        shouldThrow(" BRNP,R2 R3","Invalid operand for BRNP: R3");
+        shouldThrow(" BRNZ,R2 R3","Invalid operand for BRNZ: R3");
+      });
       describe('LOAD', function() {
         it('an immediate value', function() {
           var expected = { operation: "LOAD", operands: { d: 0x200, value: 0x10 }, };
@@ -222,6 +226,25 @@ describe('TOY assembly grammar', function() {
           var expected = { operation: "STOR", operands: { d: 0x200, register: 0xC }, };
           expect(toyGrammar.parse(" STOR,R2 RC")).toEqual(expected);
         });
+        it('cannot store to a literal', function() {
+          shouldThrow(" STOR,R2 #$42", "Cannot STOR to literal (#) value");
+        });
+      });
+      it('MOV', function() {
+        var expected = { 
+          operation: "ADDR", 
+          operands: { d:0x200, s:0, t:3 }
+        };
+        expect(toyGrammar.parse(" MOV,R2 R3")).toEqual(expected);
+      });
+      it('MOV does not accept an adress', function() {
+        shouldThrow(" MOV,R2 $42", "MOV is register -> register");
+      });
+      it('MOV does not accept a value', function() {
+        shouldThrow(" MOV,R2 #$42", "MOV is register -> register");
+      });
+      it('MOV does not accept any arguments', function() {
+        shouldThrow(" MOV,R2 asdf", "MOV is register -> register");
       });
     });
     describe('type 3', function() {
@@ -239,6 +262,32 @@ describe('TOY assembly grammar', function() {
         var expected = { operation: "JMPL", operands: { d: 0xD00 }, };
         expect(toyGrammar.parse(" JMPL,RD")).toEqual(expected);
       });
+    });
+    describe('pseudo ops', function() {
+      it('NOP', function() {
+       expect(toyGrammar.parse(" NOP")).toEqual({ 
+         operation: "BRNP", operands: {d:0}
+       });
+      });
+      it('NOP accepts no args', function() {
+       shouldThrow(" NOP #$80", "Type 4 operations cannot have operands");
+       });
+       it('JMP', function() {
+         expect(toyGrammar.parse(" JMP $42")).toEqual({ 
+           operation: "BRNZ", operands: {d:0, address:0x42}
+         });
+       });
+       it('JMP values treated as addresess', function() {
+         expect(toyGrammar.parse(" JMP #$42")).toEqual({ 
+           operation: "BRNZ", operands: {d:0, address:0x42}
+         });
+       });
+       it('JMP cannot have a register', function() {
+         shouldThrow(" JMP R2", "JMP must have an address");
+       });
+       it('JMP cannot have no argument', function() {
+         shouldThrow(" JMP", "JMP must have an address");
+       });
     });
   });
 });
