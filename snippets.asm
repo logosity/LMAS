@@ -14,3 +14,24 @@ LOOP  SUBR,R2 R2 R3
       LOAD,R9 #$44
       STOR,R9 IO
 
+ LOAD,R2 #$FF
+ LOAD,R3 #1
+ LOAD,R4 #8
+ LOAD,R5 #$4441
+ SHRL,R6 R5 R4
+
+      LOAD,R1 #$E0
+      LOAD,R2 #0
+      LOAD,R3 #0
+LOOP  ADDR,R2 R2 R3
+      ADDR,R4 R1 R2
+      LOAD,R5 R4
+      STOR,R5 $FF
+      BRNP,R4 LOOP
+    
+      HALT
+
+      ORG $E0
+MSG   ASCII "Hello World!"
+
+MSG @$E0 6865 6C6C 6F2C 2077 6F72 6C64 210A

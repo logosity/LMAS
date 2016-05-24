@@ -1,9 +1,9 @@
 ;;;;; LASM - assembler specification/examples
 ; supported architectures: TOY
-; 16 opcodes, 3 pseudo-ops, 6 directives, 3 macros.
+; 16 opcodes, 3 pseudo-ops, 8 directives.
 ; all instructions are a 16-bit word.
 ; no reloc (obviously). 
-; only labels, ';' & '@' can be in position 1. labels defs must be.
+; labels definitions must be in position one comments starting with ';' can be.
 
 ;;;; Opcodes. All teh codes. An '_' means nibble is not used in instruction
            HALT               ; 0___
@@ -39,14 +39,12 @@ myarray    DS 5               ; always words (16 bit)
 ; data entry directive
 MSG        HEX 68 65 6C 6F 2C 20 77 6F 72 6C 64 21 00  
 
-;;;; Macros
-; @ for concise code/data entry
-MSG @$10       720A 7301 2223 d212 79ff  ; i.e. ORG $10 \n  HEX ...
-MSG @         720A 7301 2223 d212 79ff  ; i.e. ORG <LC> \n HEX ... 
-; strings
-          ASCII  "Hello World!"    ; produces HEX line as above minus the 00 
-          ASCIIZ "Hello World!"    ; produces HEX line as above including the 00
+; string directive produces length prefixed HEX line as above padding with 00 as necessary
+           ASCII  "Hello World!" 
 
+; @ for concise code/data entry
+MSG @$10   720A 7301 2223 d212 79ff  ; i.e. ORG $10 \n  HEX ...
+MSG @      720A 7301 2223 d212 79ff  ; i.e. ORG <LC> \n HEX ... 
 
 ; cases that need to be tested
 disallowing labels with same name as the registers (R1 RC, etc)

@@ -24,7 +24,7 @@ lasm.opcodeTable = function() {
     SUBR: type1(0x2000),
     ANDR: type1(0x3000),
     XORR: type1(0x4000),
-    SHLR: type1(0x5000),
+    SHRL: type1(0x5000),
     SHRR: type1(0x6000),
     ORG: {
       symbols: function(opdata,result) { 
@@ -35,6 +35,10 @@ lasm.opcodeTable = function() {
         return result;
       },
       translate: function(op, code) {
+        var times = op.operands.address - (code.length - 2);
+        _.each(_.range(0,times), function(i) {
+          code.push(0);
+        });
         return code;
       },
     },
@@ -105,13 +109,17 @@ lasm.opcodeTable = function() {
         return result;
       },
       translate: function(op, code, lookup) {
-        if(op.operands.value) {
+        if(!_.isUndefined(op.operands.value)) {
           code.push(0x7000 | op.operands.d | op.operands.value);
-        } else if(op.operands.address) {
+        } else if(!_.isUndefined(op.operands.address)) {
           code.push(0x8000 | op.operands.d | op.operands.address);
-        } else if(op.operands.label) {
-          code.push(0x8000 | op.operands.d | lookup(op.operands.label));
-        } else if(op.operands.register) {
+        } else if(!_.isUndefined(op.operands.label)) {
+          if(op.operands.label[0] === "#") {
+            code.push(0x7000 | op.operands.d | lookup(op.operands.label.slice(1)));
+          } else {
+            code.push(0x8000 | op.operands.d | lookup(op.operands.label));
+          }
+        } else if(!_.isUndefined(op.operands.register)) {
           code.push(0xA000 | op.operands.d | op.operands.register);
         } else {
           //parser should never allow this to happen, but...
@@ -171,7 +179,7 @@ lasm.assemble = function(code) {
     return firstPass.symbols[symbol];
   };
   _.each(lines, function(line) {
-    if(!_.isEmpty(line)) {
+    if(!_.isEmpty(line) && !_.isUndefined(line.operation)) {
       var translate = lasm.opcodeTable[line.operation].translate;
       result = translate(line, result, symbolTable);
     }

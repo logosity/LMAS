@@ -41,8 +41,8 @@ describe('TOY assembly grammar', function() {
       expect(toyGrammar.parse("foo; stuff, and more")).toEqual(expected);
     });
   });
-  describe('macros', function() {
-    it('@ macro', function() {
+  describe('@ directive', function() {
+    it('can have labels and comments', function() {
       var expected = [
         {
           operation: "ORG",
@@ -58,7 +58,7 @@ describe('TOY assembly grammar', function() {
       var line = "foo @$10 1234 5678 ; stuff, and more";
       expect(toyGrammar.parse(line)).toEqual(expected);
     });
-    it('@ macro will use current lc', function() {
+    it('uses current lc if one not specified', function() {
       var expected = [
         {
           operation: "HEX",
@@ -67,6 +67,21 @@ describe('TOY assembly grammar', function() {
       ];
       var line = " @ 1234 5678";
       expect(toyGrammar.parse(line)).toEqual(expected);
+    });
+    it('handles hex values', function() {
+      expect(toyGrammar.parse("MSG @$E0 4441")).toEqual([
+        {
+          operation: "ORG",
+          operands: {address: 0xE0}
+        },
+        {
+          label: "MSG",
+        },
+        {
+          operation: "HEX",
+          operands: {data: [0x4441]}
+        }
+      ]);
     });
   });
   describe('directives', function() {
@@ -129,6 +144,29 @@ describe('TOY assembly grammar', function() {
     it('EQU directive must have label', function() {
       shouldThrow(" equ $42", "LABEL required for EQU directive.");
     });
+    describe('ASCII directive', function() {
+      it('expands to length-prefixed HEX padded with null', function() {
+        expect(toyGrammar.parse(' ASCII "Hello!"')).toEqual({
+          operation: "HEX",
+          operands: { data: [4, 0x4865, 0x6C6C, 0x6F21,0x0000] }
+        });
+      });
+      it('odd length strings padded in low-byte', function() {
+        expect(toyGrammar.parse(' ASCII "Hello"')).toEqual({
+          operation: "HEX",
+          operands: { data: [3, 0x4865, 0x6C6C, 0x6F00] }
+        });
+      });
+      it('single quotes OK', function() {
+        expect(toyGrammar.parse(" ASCII 'Hello'")).toEqual({
+          operation: "HEX",
+          operands: { data: [3, 0x4865, 0x6C6C, 0x6F00] }
+        });
+      });
+      it('escaped quotes will not work properly', function() {
+        shouldThrow(' ASCII "Hel\"lo"', "Escaped quotes not supported");
+      });
+    });
   });
   describe('instructions', function() {
     describe('overall structure', function() {
@@ -173,7 +211,7 @@ describe('TOY assembly grammar', function() {
         shouldThrow(" ADDR,RD", "Type 1 operations must have form XXXX,RX RX RX");
       });
       it('all supported codes have same format', function() {
-        _.each(["ADDR","SUBR","ANDR","XORR","SHLR","SHRR"],function(mnemonic) {
+        _.each(["ADDR","SUBR","ANDR","XORR","SHRL","SHRR"],function(mnemonic) {
           var expected = { operation: mnemonic, operands: { d: 0xF00, s: 0x30, t: 4 }, };
           var inst = " " + mnemonic + ",RF R3 R4";
 
@@ -190,15 +228,33 @@ describe('TOY assembly grammar', function() {
       it('can have a label as operand', function() {
         var expected = { operation: "LOAD", operands: { d: 0x200, label: "FOO" }, };
         expect(toyGrammar.parse(" LOAD,R2 foo")).toEqual(expected);
-    });
+      });
+      it('can have value label as operand', function() {
+        var expected = { operation: "LOAD", operands: { d: 0x200, label: "#FOO" }, };
+        expect(toyGrammar.parse(" LOAD,R2 #foo")).toEqual(expected);
+      });
       it('BRN instructions do not accept registers', function() {
         shouldThrow(" BRNP,R2 R3","Invalid operand for BRNP: R3");
         shouldThrow(" BRNZ,R2 R3","Invalid operand for BRNZ: R3");
       });
       describe('LOAD', function() {
         it('an immediate value', function() {
-          var expected = { operation: "LOAD", operands: { d: 0x200, value: 0x10 }, };
-          expect(toyGrammar.parse(" LOAD,R2 #$10")).toEqual(expected);
+          expect(toyGrammar.parse(" load,r2 #$10")).toEqual({
+            operation: "LOAD", 
+            operands: { d: 0x200, value: 0x10 }, 
+          });
+          expect(toyGrammar.parse(" load,r2 #1")).toEqual({
+            operation: "LOAD", 
+            operands: { d: 0x200, value: 1 }, 
+          });
+          expect(toyGrammar.parse(" LOAD,R1 #0")).toEqual({
+            operation: "LOAD", 
+            operands: { d: 0x100, value: 0 }, 
+          });
+          expect(toyGrammar.parse(" LOAD,R1 #0")).toEqual({
+            operation: "LOAD", 
+            operands: { d: 0x100, value: 0 }, 
+          });
         });
         it('from an address', function() {
           var expected = { operation: "LOAD", operands: { d: 0x200, address: 0x10 }, };

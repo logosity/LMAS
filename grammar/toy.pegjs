@@ -40,9 +40,20 @@
     });
   }
 
+  function toAscii(chrString) {
+    var padding = chrString.length % 2 === 0 ? "\0\0" : "\0";
+    var chars = util.partition(chrString + padding, 2);
+    var result = [chars.length];
+    return result.concat(_.map(chars,function(chr) {
+      var high = _.first(chr).charCodeAt();
+      var low = _.last(chr).charCodeAt();
+      return (high << 8) | low;
+    }));
+  }
+
   function createOp(operation, operands, label, comment) {
     var opArgs = operands ? { operands: operands } : undefined;
-    return _.extend({ operation: operation },opArgs , label, comment);
+    return _.extend({ operation: up(operation) },opArgs , label, comment);
 
   }
 
@@ -58,6 +69,9 @@
     return createOp("EQU",_.extend(label, val));
   }
 
+  function invalidString() {
+    error("Escaped quotes not supported");
+  }
   function invalidLabel(line) {
     error("Invalid label character. (missing initial whitespace?)");
   }
@@ -116,8 +130,11 @@ line
   }
   / inst:instruction { return inst; }
 
-  / text:label at:at_directive comm:comment {
-      return [_.first(at), _.extend(text, comm), _.last(at)];
+  / label:label at:at_directive comm:comment {
+      return [_.first(at), _.extend(label, comm), _.last(at)];
+    }
+  / label:label at:at_directive {
+      return [_.first(at), label, _.last(at)];
     }
   / at:at_directive { return at; }
 
@@ -138,26 +155,27 @@ letter
   = [a-z]i
   / "," { invalidLabel(); }
 
-hexNumber
-  = val:([0-9a-f]i) { return up(val); }
-
 register
-  = reg:([Rr] hexNumber) { return toNumber(upjoin(reg)); }
+  = reg:([Rr] hexChar) { return toNumber(upjoin(reg)); }
 
 d_reg
   = "," reg:register { return {d: dRegisterShift(reg)}; }
 
 address
   = addr:numericLiteral { return { address: addr}; }
+  / "#" label:label { return { label: "#" + label.label }; }
   / label:label { return label; }
 
 value
   = "#" val:numericLiteral { return {value: val}; }
 
+hexChar
+  = [0-9A-F]i
+
 numericLiteral
-  = literal:([$%]? hexNumber hexNumber) { 
-    return toNumber(upjoin(literal)); 
-  }
+  = n:("$" hexChar+) { return toNumber(upjoin(n)); } 
+  / n:("%" [01]+) { return toNumber(upjoin(n)); } 
+  / n:([0-9]+) { return toNumber(upjoin(n)); } 
 
 label
   = text:letter+ { return {label: upjoin(text)}; }
@@ -185,7 +203,7 @@ type_one_mnemonic
   / "SUBR"i
   / "ANDR"i
   / "XORR"i
-  / "SHLR"i
+  / "SHRL"i
   / "SHRR"i
 
 type_one_opcode
@@ -276,6 +294,14 @@ type_five_instructions
 directive
   = ws+ "ORG"i ws+ addr:address { return createOrg(addr); }
   / ws+ "HEX"i data:hexDataArray { return createHex(data); }
+  / ws+ "ASCII"i ws+ str:charString { return createHex(toAscii(str)); }
+
+charString
+  = '"' text:([\x20\x21\x23-\x7e]+) '"' ws* [^;]+ { invalidString(); }
+  / "'" text:([\x20\x21\x23-\x7e]+) "'" ws* [^;]+ { invalidString(); }
+  / '"' text:([\x20\x21\x23-\x7e]+) '"' { return join(text); }
+  / "'" text:([\x20-\x26\x28-\x7e]+) "'" { return join(text); }
+
 
 equ_directive
   = ws+ "EQU"i ws+ val:value { return val; }

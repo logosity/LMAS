@@ -13,8 +13,13 @@ describe('LMAS Assembler', function() {
     expect(lasm.assemble(code)).toEqual(binary);
     });
     it('sets the lc if an address is given', function() {
-    var code = ' @$10 1234 45FF 891C';
-    var binary = Uint16Array.from([0,0x10,0x1234,0x45ff,0x891c]);
+    var code = ' @3 1234 45FF 891C';
+    var binary = Uint16Array.from([0,3,0,0,0,0x1234,0x45ff,0x891c]);
+    expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('handles a label if given', function() {
+    var code = 'MSG @3 1234 45FF 891C';
+    var binary = Uint16Array.from([0,3,0,0,0,0x1234,0x45ff,0x891c]);
     expect(lasm.assemble(code)).toEqual(binary);
     });
   });
@@ -116,8 +121,8 @@ describe('LMAS Assembler', function() {
     });
     describe('LOAD', function() {
       it('from literal value', function() {
-        var code = ' LOAD,R2 #$80';
-        var binary = Uint16Array.from([0,0,0x7280]);
+        var code = ' LOAD,R2 #$80\n load,r2 #$FF\n load,r3 #1\n LOAD,R1 #0';
+        var binary = Uint16Array.from([0,0,0x7280,0x72FF,0x7301,0x7100]);
         expect(lasm.assemble(code)).toEqual(binary);
       });
       it('from address', function() {
@@ -130,18 +135,23 @@ describe('LMAS Assembler', function() {
         var binary = Uint16Array.from([0,0,0x82FF]);
         expect(lasm.assemble(code)).toEqual(binary);
       });
+      it('from value label', function() {
+        var code = 'IO EQU $FF\n LOAD,R2 #IO';
+        var binary = Uint16Array.from([0,0,0x72FF]);
+        expect(lasm.assemble(code)).toEqual(binary);
+      });
       it('from address pointed to by register', function() {
         var code = ' LOAD,R2 RF';
         var binary = Uint16Array.from([0,0,0xA20F]);
         expect(lasm.assemble(code)).toEqual(binary);
       });
     });
-    it('SHLR (SHift Left Register)', function() {
-      var code = ' SHLR,R2 R3 R4';
+    it('SHRL (SHift Register Left)', function() {
+      var code = ' SHRL,R2 R3 R4';
       var binary = Uint16Array.from([0,0,0x5234]);
       expect(lasm.assemble(code)).toEqual(binary);
     });
-    it('SHRR (SHift Right Register)', function() {
+    it('SHRR (SHift Register Right)', function() {
       var code = ' SHRR,R2 R3 R4';
       var binary = Uint16Array.from([0,0,0x6234]);
       expect(lasm.assemble(code)).toEqual(binary);
@@ -159,6 +169,11 @@ describe('LMAS Assembler', function() {
     it('XORR (eXlusive OR Registers)', function() {
       var code = ' XORR,R2 R3 R4';
       var binary = Uint16Array.from([0,0,0x4234]);
+      expect(lasm.assemble(code)).toEqual(binary);
+    });
+    it('ORG padding', function() {
+      var code = ' ADDR,R2 R3 R4\n ORG 3\n ADDR,R2 R3 R4\n ORG 9\n ADDR,R2 R3 R4';
+      var binary = Uint16Array.from([0,0,0x1234,0,0,0x1234,0,0,0,0,0,0x1234]);
       expect(lasm.assemble(code)).toEqual(binary);
     });
   });
