@@ -41,11 +41,40 @@ lmas.ui.hex16 = function(value) {
   return sprintf('%04X',value);
 };
 lmas.events = {
+  handlers: {
+    stdOut: function(eventData) {
+      var sendToTerminal = function(chr) {
+        if(chr === 0) {
+          lmas.terminal.flush();
+        } else {
+          lmas.terminal.echo(String.fromCharCode(chr),{flush:false});
+        }
+      };
+      if(!_.isUndefined(lmas.terminal)) {
+        sendToTerminal(eventData.value >> 8);
+        sendToTerminal(eventData.value & 0x00FF);
+      }
+    },
+    onMemory: function() {
+      return [
+        function(eventData) {
+          var id = lmas.ui.memId(eventData.address);
+          lmas.animation.stateChange(id);
+          $(id).text(lmas.ui.hex16(eventData.value));
+        },
+        function(eventData) {
+          if(eventData.address === 0xFF) {
+            lmas.events.handlers.stdOut(eventData);
+          }
+        }
+      ];
+    }
+  },
   toy: { 
     memoryChange: function(eventData) {
-      var id = lmas.ui.memId(eventData.address);
-      lmas.animation.stateChange(id);
-      $(id).text(lmas.ui.hex16(eventData.value));
+      _.each(lmas.events.handlers.onMemory(),function(fn) {
+        fn(eventData);
+      });
     },
     registerChange: function(eventData) {
       var id = lmas.ui.regId(eventData.address);

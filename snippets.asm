@@ -20,14 +20,17 @@ LOOP  SUBR,R2 R2 R3
  LOAD,R5 #$4441
  SHRL,R6 R5 R4
 
-      LOAD,R1 #$E0
-      LOAD,R2 #0
-      LOAD,R3 #0
-LOOP  ADDR,R2 R2 R3
-      ADDR,R4 R1 R2
+IO EQU $FF
+      LOAD,RF #1
+      LOAD,R1 #MSG
+      LOAD,R2 MSG
+      LOAD,R3 #1
+LOOP  ADDR,R4 R1 R3
       LOAD,R5 R4
-      STOR,R5 $FF
-      BRNP,R4 LOOP
+      STOR,R5 IO
+      SUBR,R2 R2 RF
+      ADDR,R3 R3 RF
+      BRNP,R2 LOOP
     
       HALT
 
@@ -35,3 +38,9 @@ LOOP  ADDR,R2 R2 R3
 MSG   ASCII "Hello World!"
 
 MSG @$E0 6865 6C6C 6F2C 2077 6F72 6C64 210A
+
+    LOAD,R1 #$68
+    LOAD,R2 #8
+    SHRL,R1 R1 R2
+    STOR,R1 $FF        
+

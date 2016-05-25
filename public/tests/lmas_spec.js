@@ -130,6 +130,19 @@ describe('LMAS', function() {
           lmas.events.toy.reset({pc:0x10});
           expect(lmas.lastOperation).toBe(undefined);
         });
+        it('invokes all of the memory handlers', function() {
+          var stubs = {
+            fn1: function() {},
+            fn2: function() {}
+          };
+          spyOn(stubs,"fn1");
+          spyOn(stubs,"fn2");
+          var fns = [stubs.fn1, stubs.fn2];
+          spyOn(lmas.events.handlers,"onMemory").and.returnValue(fns);
+          lmas.events.toy.memoryChange({});
+          expect(stubs.fn1).toHaveBeenCalled();
+          expect(stubs.fn2).toHaveBeenCalled();
+        });
         it('updates a memory address', function() {
           lmas.showView('#machine-toy');
           lmas.events.toy.memoryChange({address:0xc0, value:0x1234});
@@ -137,6 +150,21 @@ describe('LMAS', function() {
 
           lmas.events.toy.memoryChange({address:0xc0, value: 0xcf24});
           expect($('#MC0').text()).toEqual('CF24');
+        });
+        it('invokes stdOut handler only on writes to FF', function() {
+          lmas.showView('#machine-toy');
+          spyOn(lmas.terminal,"flush");
+          spyOn(lmas.terminal,"echo");
+          lmas.events.toy.memoryChange({address:0x42, value: 0x2244});
+          expect(lmas.terminal.flush).not.toHaveBeenCalled();
+          expect(lmas.terminal.echo).not.toHaveBeenCalled();
+
+          lmas.events.toy.memoryChange({address:0xFF, value: 0x6869});
+          expect(lmas.terminal.echo).toHaveBeenCalledWith("h",{flush:false});
+          expect(lmas.terminal.echo).toHaveBeenCalledWith("i",{flush:false});
+          expect(lmas.terminal.flush).not.toHaveBeenCalled();
+          lmas.events.toy.memoryChange({address:0xFF, value: 0x000});
+          expect(lmas.terminal.flush).toHaveBeenCalled();
         });
         it('animates changes to pc', function() {
           lmas.events.toy.pcChange({pc:0x10});

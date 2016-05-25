@@ -103,32 +103,32 @@ line
   = text:label dir:directive comm:comment {
     return _.extend({}, text, dir, comm);
   }
-  / text:label dir:directive {
+  / text:label dir:directive ws* {
     return _.extend({}, text, dir);
   }
   / text:label equ:equ_directive comm:comment{
     return _.extend(createEqu(text,equ),comm);
   }
-  / text:label equ:equ_directive {
+  / text:label equ:equ_directive ws* {
     return createEqu(text,equ);
   }
   / dir:directive comm:comment {
     return _.extend({}, dir, comm);
   }
-  / dir:directive { return dir ; }
+  / dir:directive ws* { return dir ; }
 
-  / equ_directive { error("LABEL required for EQU directive."); }
+  / equ_directive ws* { error("LABEL required for EQU directive."); }
 
   / text:label inst:instruction comm:comment {
     return _.extend({}, text, inst, comm);
   }
-  / text:label inst:instruction {
+  / text:label inst:instruction ws* {
     return _.extend({}, text, inst);
   }
   / inst:instruction comm:comment {
     return _.extend({}, inst, comm);
   }
-  / inst:instruction { return inst; }
+  / inst:instruction ws* { return inst; }
 
   / label:label at:at_directive comm:comment {
       return [_.first(at), _.extend(label, comm), _.last(at)];

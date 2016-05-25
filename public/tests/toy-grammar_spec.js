@@ -40,6 +40,20 @@ describe('TOY assembly grammar', function() {
       };
       expect(toyGrammar.parse("foo; stuff, and more")).toEqual(expected);
     });
+    it('whitespace after operations ok', function() {
+      var fn = function(cmd) {
+        return function() {
+          toyGrammar.parse(cmd)
+        }
+      };
+      expect(fn(" STOR,R2 RC   ")).not.toThrow();
+      expect(fn("FOO STOR,R2 RC   ")).not.toThrow();
+      expect(fn(" ORG $42   ")).not.toThrow();
+      expect(fn("FOO ORG $42   ")).not.toThrow();
+      expect(fn("FOO EQU $42   ")).not.toThrow();
+      expect(fn(" @ 4545   ")).not.toThrow();
+      expect(fn("FOO @ 4545   ")).not.toThrow();
+    });
   });
   describe('@ directive', function() {
     it('can have labels and comments', function() {
