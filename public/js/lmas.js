@@ -70,7 +70,7 @@ lmas.events = {
       ];
     }
   },
-  toy: { 
+  toy: {
     memoryChange: function(eventData) {
       _.each(lmas.events.handlers.onMemory(),function(fn) {
         fn(eventData);
@@ -111,7 +111,7 @@ lmas.events = {
       };
 
       var animations = {
-        0x1: type1, 
+        0x1: type1,
         0x2: type1,
         0x3: type1,
         0x4: type1,
@@ -151,17 +151,17 @@ lmas.events = {
 };
 
 lmas.landingView = function(unused, targetElement) {
-  $('#home-tab').addClass('active');   
+  $('#home-tab').addClass('active');
   targetElement.append($('.templates .landing-view').clone());
 };
 
 lmas.machineView = function(machineType, targetElement) {
   lmas.toy = toy.create(lmas.events.toy);
-  $('#' + machineType + '-tab').addClass('active');   
+  $('#' + machineType + '-tab').addClass('active');
   var view = $('.templates .machine-view').clone();
   lmas.editor = lmas.createEditor(view.find('.text-editor'));
   lmas.terminal = lmas.initTerminal(machineType, view.find('.screen'));
-  
+
   lmas.initViewHandlers(machineType,view,lmas.editor);
 
   lmas.appendToyRegisterLabels($(view).find('.mem-header'));
@@ -173,20 +173,7 @@ lmas.machineView = function(machineType, targetElement) {
 };
 
 lmas.showView = function(hash) {
-  var routes = {
-    '' : lmas.landingView,
-    '#machine': lmas.machineView
-  };
-
-  var hashParts = hash.split("-");
-
-  var viewFn = routes[hashParts[0]];
-  if (viewFn) {
-    $('.machine-tab').removeClass('active');   
-    viewFn(hashParts[1], $('.view-container').empty());
-  }
-
-  var tab = $(this).attr('id');
+  lmas.machineView('toy', $('.view-container').empty());
 };
 
 lmas.table = {};
@@ -219,8 +206,8 @@ lmas.appendToyMemory = function(elem) {
   var cells = _.map(lmas.toy.dump().ram(),function(val,idx) {
     return {id: sprintf("M%02X",idx)};
   });
-  
-  lmas.table.appendToElement(elem,util.partition(cells,16),rowHeaders); 
+
+  lmas.table.appendToElement(elem,util.partition(cells,16),rowHeaders);
 };
 
 
@@ -236,7 +223,7 @@ lmas.appendToyRegisters = function(elem) {
 lmas.appendToyRegisterLabels = function(elem) {
   var pc = [{value:"PC", klass: "lead", elem: 'th'}];
   var cells = _.map(_.range(16), function(i) {
-    return {value: "R" + sprintf('%X',i), klass: "lead", elem: 'th' }; 
+    return {value: "R" + sprintf('%X',i), klass: "lead", elem: 'th' };
   });
   lmas.table.appendToElement(elem,util.partition(pc.concat(cells),17));
 }
@@ -252,7 +239,7 @@ lmas.initHandlers = function() {
     }
   });
 
-  $(window).on("hashchange",function() { 
+  $(window).on("hashchange",function() {
     lmas.showView(window.location.hash);
   });
   lmas.showView(window.location.hash);
@@ -283,19 +270,19 @@ lmas.createEditor = function(elem) {
       "Shift-Ctrl-F": function(cm) {
         cm.setOption("fullScreen", !cm.getOption("fullScreen"));
       },
-    }  
+    }
   });
 };
 
 lmas.initTerminal = function(machineType, elem) {
   return elem.terminal({
-    run: function() { 
-      lmas.toy.run(); 
-      lmas.toy.load(lmas.toy.dump()); 
+    run: function() {
+      lmas.toy.run();
+      lmas.toy.load(lmas.toy.dump());
     },
     halt: function() { window.clearInterval(lmas.activeInterval); },
     step: function() { lmas.toy.step(); },
-    set: function(duration) { 
+    set: function(duration) {
       lmas.animation.duration = duration; },
     jog: function() {
       var term = this;
@@ -306,7 +293,7 @@ lmas.initTerminal = function(machineType, elem) {
           term.exec("step",true)
         }
       },lmas.animation.duration);
-    
+
     },
     reset: lmas.toy.reset,
     load: function() { lmas.toy.load(lasm.assemble(lmas.editor.getValue())); }

@@ -61,20 +61,6 @@ describe('LMAS', function() {
   });
 
   describe('views', function() {
-    it('shows the landing page view when there is no hash', function() {
-      lmas.showView('');
-      expect($('.view-container .landing-view').length).toEqual(1);
-    });
-    it('changes the active tab when navigating to a view', function() {
-      $('.machine-tab').removeClass("active");
-      lmas.showView('');
-      expect($('#home-tab').hasClass('active')).toBe(true);
-    });
-    it('changes the view when tab is click', function() {
-      lmas.initHandlers();
-      $('#home-tab').trigger('click');
-      expect($('.view-container .landing-view').length).toEqual(1);
-    });
     it('subscribes to the hash change event', function() {
       lmas.initHandlers();
       spyOn(lmas,'showView');
