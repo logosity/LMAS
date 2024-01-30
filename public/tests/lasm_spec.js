@@ -27,7 +27,7 @@ describe('LMAS Assembler', function() {
     it('for an EQU directive', function() {
       var code = lasm.prepare("IO EQU $42\n");
       var symbols = lasm.buildSymbols(code).symbols;
-      expect(symbols).toEqual({ IO: 0x42 }); 
+      expect(symbols).toEqual({ IO: 0x42 });
     });
     it('for a single line', function() {
       var code = lasm.prepare("foo LOAD,R2 $10\n");
@@ -81,6 +81,12 @@ describe('LMAS Assembler', function() {
           FOO: 0x42,
           BAR: 0x44
       }});
+    });
+    it('strips out comments', function() {
+      var code = lasm.prepare("; comment one\n;comment two\n ORG $42\n");
+      lasm.buildSymbols(code)
+      expect(code[0].operation).toEqual("ORG");
+      expect(code[0].lineNumber).toEqual(0);
     });
   });
   describe('translate', function() {

@@ -1,16 +1,20 @@
 var lasm = {};
 
 lasm.prepare = function(code) {
-  return _.flatten(_.map(code.split("\n"), function(line) {
+  var result = _.flatten(_.map(code.split("\n"), function(line) {
     return toyGrammar.parse(line);
   }));
+  return _.filter(result, function(line) {
+    return _.has(line, 'operation') || _.has(line, 'label');
+  });
 };
+
 
 lasm.opcodeTable = function() {
   var type1 = function(instruction) {
     return {
-      symbols: function(opdata, result) { 
-        result.lc += 1; 
+      symbols: function(opdata, result) {
+        result.lc += 1;
         return result;
       },
       translate: function(op, code) {
@@ -27,7 +31,7 @@ lasm.opcodeTable = function() {
     SHRL: type1(0x5000),
     SHRR: type1(0x6000),
     ORG: {
-      symbols: function(opdata,result) { 
+      symbols: function(opdata,result) {
         if(opdata.lineNumber === 0) {
           result.pc = opdata.operands.address;
         }
@@ -61,11 +65,11 @@ lasm.opcodeTable = function() {
       }
     },
     BRNZ: {
-      symbols: function(opdata,result) { 
-        result.lc += 1; 
+      symbols: function(opdata,result) {
+        result.lc += 1;
         return result;
       },
-      translate: function(op, code, lookup) { 
+      translate: function(op, code, lookup) {
         if(op.operands.address) {
           code.push(0xC000 | op.operands.d | op.operands.address);
         } else if(op.operands.label) {
@@ -78,11 +82,11 @@ lasm.opcodeTable = function() {
       }
     },
     BRNP: {
-      symbols: function(opdata,result) { 
-        result.lc += 1; 
+      symbols: function(opdata,result) {
+        result.lc += 1;
         return result;
       },
-      translate: function(op, code, lookup) { 
+      translate: function(op, code, lookup) {
         if(op.operands.address) {
           code.push(0xD000 | op.operands.d | op.operands.address);
         } else if(op.operands.label) {
@@ -95,17 +99,17 @@ lasm.opcodeTable = function() {
       }
     },
     HALT: {
-      symbols: function(opdata,result) { 
-        result.lc += 1; 
+      symbols: function(opdata,result) {
+        result.lc += 1;
         return result;
       },
-      translate: function(op, code, lookup) { 
+      translate: function(op, code, lookup) {
         code.push(0);
         return code; }
     },
     LOAD: {
-      symbols: function(opdata,result) { 
-        result.lc += 1; 
+      symbols: function(opdata,result) {
+        result.lc += 1;
         return result;
       },
       translate: function(op, code, lookup) {
@@ -130,8 +134,8 @@ lasm.opcodeTable = function() {
       }
     },
     STOR: {
-      symbols: function(opdata,result) { 
-        result.lc += 1; 
+      symbols: function(opdata,result) {
+        result.lc += 1;
         return result;
       },
       translate: function(op, code, lookup) {
@@ -150,8 +154,8 @@ lasm.opcodeTable = function() {
       }
     },
     JMPR: {
-      symbols: function(opdata, result) { 
-        result.lc += 1; 
+      symbols: function(opdata, result) {
+        result.lc += 1;
         return result;
       },
       translate: function(op, code) {
@@ -160,8 +164,8 @@ lasm.opcodeTable = function() {
       }
     },
     JMPL: {
-      symbols: function(opdata, result) { 
-        result.lc += 1; 
+      symbols: function(opdata, result) {
+        result.lc += 1;
         return result;
       },
       translate: function(op, code) {

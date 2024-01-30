@@ -2,13 +2,13 @@
 ; supported architectures: TOY
 ; 16 opcodes, 3 pseudo-ops, 8 directives.
 ; all instructions are a 16-bit word.
-; no reloc (obviously). 
+; no reloc (obviously).
 ; labels definitions must be in position one comments starting with ';' can be.
 
 ;;;; Opcodes. All teh codes. An '_' means nibble is not used in instruction
            HALT               ; 0___
 LOOP       ADDR,R2 R3 R4      ; 1234 (incl label 'loop')
-           SUBR,R2 R3 R4      ; 2234 
+           SUBR,R2 R3 R4      ; 2234
            ANDR,R2 R3 R4      ; 3234
            XORR,R2 R3 R4      ; 4234
            SHLR,R2 R3 R4      ; 5234
@@ -32,20 +32,21 @@ LOOP       ADDR,R2 R3 R4      ; 1234 (incl label 'loop')
 IO EQU $FF                    ; define an absolute label
 
 ; structural directives (both ORG & DS zero fill)
-MSG        ORG $F0            ; move the LC (and starting PC, if top of file). 
-myarray    DS 5               ; always words (16 bit)     
+MSG        ORG $F0            ; move the LC (and starting PC, if top of file).
+myarray    DS 5               ; always words (16 bit)
            SPACE 42           ; inserts new lines in listings
 
 ; data entry directive
-MSG        HEX 68 65 6C 6F 2C 20 77 6F 72 6C 64 21 00  
+MSG        HEX 68 65 6C 6F 2C 20 77 6F 72 6C 64 21 00
 
 ; string directive produces length prefixed HEX line as above padding with 00 as necessary
-           ASCII  "Hello World!" 
+           ASCII  "Hello World!"
 
 ; @ for concise code/data entry
 MSG @$10   720A 7301 2223 d212 79ff  ; i.e. ORG $10 \n  HEX ...
-MSG @      720A 7301 2223 d212 79ff  ; i.e. ORG <LC> \n HEX ... 
+MSG @      720A 7301 2223 d212 79ff  ; i.e. ORG <LC> \n HEX ...
 
 ; cases that need to be tested
+labels in @ statements
 disallowing labels with same name as the registers (R1 RC, etc)
 allowing alphanumeric labels

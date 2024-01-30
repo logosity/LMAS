@@ -52,7 +52,7 @@ toy.create = function(handlers) {
       map.ram(bytes.ram());
     } else {
       _.each(bytes.slice(2), function(opcode,idx) {
-        map.ram(map.pc() + idx, opcode);
+        map.ram(0 + idx, opcode);
       });
     }
     if(map.callbacksEnabled && handlers && handlers.load) {
@@ -70,7 +70,7 @@ toy.create = function(handlers) {
   };
   result.reset();
   return result;
-}; 
+};
 
 toy.util = {};
 
@@ -134,7 +134,7 @@ toy.util.fns.enableCallbacks = function(obj) {
 toy.util.fns.handleEvent = function(obj) {
   return function(eventType, eventData) {
     if(obj.callbacksEnabled &&
-        obj.handlers && 
+        obj.handlers &&
         obj.handlers[eventType]) {
       obj.handlers[eventType](eventData);
     }
@@ -236,8 +236,8 @@ toy.cycle = {};
 toy.cycle.parse = function(instruction) {
   var addr = (instruction & 0x00FF);
   return {
-    opcode: instruction >> 12, 
-    d: (instruction & 0x0F00) >> 8, 
+    opcode: instruction >> 12,
+    d: (instruction & 0x0F00) >> 8,
     s: addr >> 4,
     t: addr & 0x0F,
     addr: addr
@@ -304,20 +304,20 @@ toy.cycle.interpret = function(instruction) {
       return true;
     },
     0xC: function(pc,registers,ram) {
-      if(registers(d) === 0) pc(addr);  
+      if(registers(d) === 0) pc(addr);
       return true;
     },
     0xD: function(pc,registers,ram) {
-      if(registers(d) > 0) pc(addr);  
+      if(registers(d) > 0) pc(addr);
       return true;
     },
     0xE: function(pc,registers,ram) {
-      pc(registers(d));  
+      pc(registers(d));
       return true;
     },
     0xF: function(pc,registers,ram) {
       registers(d,pc());
-      pc(addr);  
+      pc(addr);
       return true;
     }
   };
