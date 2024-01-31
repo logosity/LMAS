@@ -47,14 +47,25 @@ toy.create = function(handlers) {
     toy.util.decorate(bytes);
     map.pc(bytes.pc());
 
-    if(bytes.header() === 1) {
-      map.registers(bytes.registers());
-      map.ram(bytes.ram());
-    } else {
-      _.each(bytes.slice(2), function(opcode,idx) {
-        map.ram(0 + idx, opcode);
-      });
+    switch (bytes.header()) {
+      case 0:
+        _.each(bytes.slice(2), function(opcode,idx) {
+          map.ram(0 + idx, opcode);
+        });
+        break;
+      case 1:
+        map.registers(bytes.registers());
+        map.ram(bytes.ram());
+        break;
+      case 2:
+        _.each(bytes.slice(2), function(opcode,idx) {
+          map.ram(map.pc() + idx, opcode);
+        });
+        break;
+      default:
+        throw new Error(`unknown header value: ${bytes.header()}`);
     }
+
     if(map.callbacksEnabled && handlers && handlers.load) {
       handlers.load({oldpc: oldPc, pc:map.pc()});
     }

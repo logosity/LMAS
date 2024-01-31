@@ -7,7 +7,7 @@ describe('TOY machine', function() {
   });
   describe('run', function() {
     it('can run a program', function() {
-      toyObj.load(Uint16Array.from([0,0x10,0x7341,0x7401,0x1234,0x0000]));
+      toyObj.load(Uint16Array.from([2,0x10,0x7341,0x7401,0x1234,0x0000]));
       toyObj.run();
       var dump = toyObj.dump();
       expect(dump.pc()).toEqual(0x14);
@@ -16,7 +16,7 @@ describe('TOY machine', function() {
       expect(dump.registers(2)).toEqual(0x42);
     });
     it('can step through a program', function() {
-      toyObj.load(Uint16Array.from([0,0x10,0x7341,0x7401,0x1234,0x0000]));
+      toyObj.load(Uint16Array.from([2,0x10,0x7341,0x7401,0x1234,0x0000]));
 
       toyObj.step();
       var dump = toyObj.dump();
@@ -47,7 +47,7 @@ describe('TOY machine', function() {
       var handlers = { stepStart: function() {} };
       spyOn(handlers,"stepStart");
       var toyObj = toy.create(handlers);
-      toyObj.load(Uint16Array.from([0,0x10,0x1234]));
+      toyObj.load(Uint16Array.from([2,0x10,0x1234]));
       toyObj.step();
       expect(handlers.stepStart).toHaveBeenCalledWith({pc: 0x10,instruction:toy.cycle.parse(0x1234)});
     });
@@ -57,7 +57,7 @@ describe('TOY machine', function() {
       var map = toy.util.create(handlers);
       spyOn(toy.util,"create").and.returnValue(map);
       var toyObj = toy.create(handlers);
-      toyObj.load(Uint16Array.from([0,0x10,0x1234]));
+      toyObj.load(Uint16Array.from([2,0x10,0x1234]));
       toyObj.step();
       expect(handlers.stepEnd).toHaveBeenCalledWith({pc: 0x11,state: {pc: map.pc, registers: map.registers, ram: map.ram}, instruction:toy.cycle.parse(0x1234)});
     });
@@ -104,7 +104,7 @@ describe('TOY machine', function() {
       expect(secondDump.pc()).toEqual(defaultState.pc());
       expect(secondDump.registers(1)).toEqual(defaultState.registers(1));
       expect(secondDump.ram(0xC0)).toEqual(defaultState.ram(0xC0));
-      
+
      });
   });
   describe('dump',function() {
@@ -119,36 +119,60 @@ describe('TOY machine', function() {
     });
   });
   describe('load',function() {
-    it('can load a byte dump', function() {
+    it('from zero mode (header 0)', function() {
       var bytes = toy.util.create();
-      bytes[0] = 1;
+      bytes.header(0)
+      bytes.pc(3);
+      bytes.set([0, 0, 0, 0x1234,0x45ff,0x3455],2);
+
+      toyObj.load(bytes);
+
+      var dump = toyObj.dump();
+
+      expect(dump.pc()).toEqual(0x03);
+      expect(dump.ram(0x00)).toEqual(0);
+      expect(dump.ram(0x01)).toEqual(0);
+      expect(dump.ram(0x02)).toEqual(0);
+      expect(dump.ram(0x03)).toEqual(0x1234);
+      expect(dump.ram(0x04)).toEqual(0x45ff);
+      expect(dump.ram(0x05)).toEqual(0x3455);
+    });
+
+    it('machine state mode (header 1)', function() {
+      var bytes = toy.util.create();
+      bytes.header(1);
       bytes.pc(0x20);
       bytes.registers(1, 0x4f56);
       bytes.ram(0x14, 0x1234);
       bytes.ram(0xFF, 0xFF00);
 
       toyObj.load(bytes);
-      
+
       var dump = toyObj.dump();
+
       expect(dump.pc()).toEqual(0x20);
       expect(dump.registers(1)).toEqual(0x4f56);
       expect(dump.ram(0x14)).toEqual(0x1234);
       expect(dump.ram(0xFF)).toEqual(0xff00);
     });
-    it('can load a program', function() {
-      var bytes = toy.util.decorate(new Uint16Array(5));
-      var code = Uint16Array.from([0x1234,0x45ff,0x3455]);
-      bytes.set([0,0x20],0);
+
+    it('pc offset mode (header 2)', function() {
+      var bytes = toy.util.create();
+      bytes.header(2);
+      bytes.pc(0x20);
       bytes.set([0x1234,0x45ff,0x3455],2);
 
       toyObj.load(bytes);
 
       var dump = toyObj.dump();
+
       expect(dump.pc()).toEqual(0x20);
       expect(dump.ram(0x20)).toEqual(0x1234);
       expect(dump.ram(0x21)).toEqual(0x45ff);
       expect(dump.ram(0x22)).toEqual(0x3455);
     });
+
+
     it('will only load an array of type Uint16Array', function() {
       expect(function() {toyObj.load("foobarbaz");}).toThrow({name:"invalid", message: "invalid binary format for loading"});
       expect(function() {toyObj.load("foo\nbar\nbaz");}).toThrow({name:"invalid", message: "invalid binary format for loading"});
@@ -196,7 +220,7 @@ describe('TOY machine', function() {
         it('changes to pc', function() {
           bytes.pc(0x20);
           expect(handlers.pcChange).toHaveBeenCalledWith({oldpc: 0, pc: 0x20});
-        });  
+        });
         it('pc changes are 8-bit', function() {
           bytes.pc(0x100);
           expect(handlers.pcChange).toHaveBeenCalledWith({oldpc: 0, pc: 0x00});
@@ -234,7 +258,7 @@ describe('TOY machine', function() {
             expect(handlers.pcChange).not.toHaveBeenCalled();
             expect(handlers.registerChange).not.toHaveBeenCalled();
             expect(handlers.memoryChange).not.toHaveBeenCalled();
-          });  
+          });
           it('enable all handlers', function() {
             bytes.disableCallbacks();
             bytes.enableCallbacks();
@@ -244,7 +268,7 @@ describe('TOY machine', function() {
             expect(handlers.pcChange).toHaveBeenCalled();
             expect(handlers.registerChange).toHaveBeenCalled();
             expect(handlers.memoryChange).toHaveBeenCalled();
-          });  
+          });
         });
       });
     });
@@ -254,7 +278,7 @@ describe('TOY machine', function() {
         _.each([2,4,6,8], function(n) {
           bytes[n] = n;
         });
-       
+
         var result = bytes.region(2,7);
         expect(result).toEqual(Uint16Array.from([2,0,4,0,6,0,8]));
       });
@@ -263,7 +287,7 @@ describe('TOY machine', function() {
         expect(bytes.header()).toEqual(0);
         bytes.header(1);
         expect(bytes.header()).toEqual(1);
-      });  
+      });
       describe('PC manipulation', function() {
         it('get and set program counter', function() {
           bytes.pc(0x10);
@@ -355,14 +379,14 @@ describe('TOY machine', function() {
       map.pc(0x10);
       map.ram(map.pc(),0x12fe);
       expect(toy.cycle.fetch(map.pc, map.ram)).toEqual({opcode:1,d:2,addr:0xfe,s:0xf,t:0xe});
-    });  
+    });
     describe('TOY instruction set', function() {
       var map;
       var callInterpret = function(instruction) {
         return toy.cycle.interpret(toy.cycle.parse(instruction))(map.pc,map.registers,map.ram);
       };
       beforeEach(function() {
-        map = toy.util.create(); 
+        map = toy.util.create();
         map.pc(0x11);
       });
       it('halt', function() {
