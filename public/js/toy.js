@@ -20,12 +20,12 @@ toy.create = function(handlers) {
 
   result.step = function() {
     var instruction = toy.cycle.fetch(map.pc,map.ram);
-    raiseEvent("stepStart", {pc: map.pc(),instruction: instruction});
+    raiseEvent("onStepStart", {pc: map.pc(),instruction: instruction});
     var operation = toy.cycle.interpret(instruction);
     map.pc(map.pc() + 1);
     var stepResult = operation(map.pc,map.registers,map.ram);
     var state = {pc: map.pc, registers: map.registers, ram: map.ram};
-    raiseEvent("stepEnd",{pc: map.pc(),state:state, instruction: instruction});
+    raiseEvent("onStepEnd",{pc: map.pc(),state:state, instruction: instruction});
     return stepResult;
   };
 
@@ -34,8 +34,8 @@ toy.create = function(handlers) {
     bytes[0] = 1;
     bytes[1] = 0;
     result.load(bytes);
-    if(handlers && handlers.reset) {
-      handlers.reset({pc:bytes.pc()});
+    if(handlers && handlers.onReset) {
+      handlers.onReset({pc:bytes.pc()});
     }
   };
 
@@ -66,8 +66,8 @@ toy.create = function(handlers) {
         throw new Error(`unknown header value: ${bytes.header()}`);
     }
 
-    if(map.callbacksEnabled && handlers && handlers.load) {
-      handlers.load({oldpc: oldPc, pc:map.pc()});
+    if(map.callbacksEnabled && handlers && handlers.onLoad) {
+      handlers.onLoad({oldpc: oldPc, pc:map.pc()});
     }
   };
 
@@ -159,7 +159,7 @@ toy.util.fns.pc = function(obj) {
       return oldPc;
     case 1:
       var newPc = value & 0x00FF;
-      obj.handleEvent("pcChange",{oldpc: oldPc ,pc: newPc});
+      obj.handleEvent("onPcChange",{oldpc: oldPc ,pc: newPc});
       obj[toy.util.offsets.PC] = newPc;
       break;
     default:
@@ -171,10 +171,10 @@ toy.util.fns.pc = function(obj) {
 toy.util.fns.setRegister = function(obj) {
     return function(reg,val) {
     if(reg === 0) {
-      obj.handleEvent("registerChange",{address: 0, value: 0});
+      obj.handleEvent("onRegisterChange",{address: 0, value: 0});
     } else {
       var newValue = val & 0xFFFF;
-      obj.handleEvent("registerChange",{address: reg, value: newValue});
+      obj.handleEvent("onRegisterChange",{address: reg, value: newValue});
       obj[toy.util.offsets.REG + reg] = newValue;
     }
   };
@@ -190,7 +190,7 @@ toy.util.fns.setRegisters = function(obj) {
 toy.util.fns.setMemory = function(obj) {
     return function(loc,val) {
     var newValue = val & 0xFFFF;
-    obj.handleEvent("memoryChange",{address: loc, value: newValue});
+    obj.handleEvent("onMemoryChange",{address: loc, value: newValue});
     obj[toy.util.offsets.RAM + loc] = newValue;
   };
 };

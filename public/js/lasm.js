@@ -1,5 +1,22 @@
 var lasm = {};
 
+lasm.assemble = function(code) {
+  var lines =  lasm.prepare(code);
+  var firstPass = lasm.buildSymbols(lines);
+
+  var result = [0,firstPass.pc];
+  var symbolTable = function(symbol) {
+    return firstPass.symbols[symbol];
+  };
+  _.each(lines, function(line) {
+    if(!_.isEmpty(line) && !_.isUndefined(line.operation)) {
+      var translate = lasm.internal.opcodeTable[line.operation].translate;
+      result = translate(line, result, symbolTable);
+    }
+  });
+  return Uint16Array.from(result);
+};
+
 lasm.prepare = function(code) {
   var result = _.flatten(_.map(code.split("\n"), function(line) {
     return toyGrammar.parse(line);
@@ -9,8 +26,27 @@ lasm.prepare = function(code) {
   });
 };
 
+lasm.buildSymbols = function(code) {
+  var result = {pc: 0, lc: 0, symbols: {}};
+  _.each(code, function(line,idx) {
+    if(_.isEmpty(line)) return;
 
-lasm.opcodeTable = function() {
+    line.lineNumber = idx;
+
+    if(line.label) {
+      result.symbols[line.label] = result.lc;
+    }
+    var handler = lasm.internal.opcodeTable[line.operation];
+    if(handler) {
+      result = handler.symbols(line,result);
+    }
+  });
+  return _.omit(result, 'lc');
+}
+
+///////////////////////////////////OPCODES/////////////////////////////////////
+lasm.internal = {};
+lasm.internal.opcodeTable = function() {
   var type1 = function(instruction) {
     return {
       symbols: function(opdata, result) {
@@ -175,36 +211,3 @@ lasm.opcodeTable = function() {
     },
   };
 }();
-lasm.assemble = function(code) {
-  var lines =  lasm.prepare(code);
-  var firstPass = lasm.buildSymbols(lines);
-  var result = [0,firstPass.pc];
-  var symbolTable = function(symbol) {
-    return firstPass.symbols[symbol];
-  };
-  _.each(lines, function(line) {
-    if(!_.isEmpty(line) && !_.isUndefined(line.operation)) {
-      var translate = lasm.opcodeTable[line.operation].translate;
-      result = translate(line, result, symbolTable);
-    }
-  });
-  return Uint16Array.from(result);
-};
-
-lasm.buildSymbols = function(code) {
-  var result = {pc: 0, lc: 0, symbols: {}};
-  _.each(code, function(line,idx) {
-    if(_.isEmpty(line)) return;
-
-    line.lineNumber = idx;
-
-    if(line.label) {
-      result.symbols[line.label] = result.lc;
-    }
-    var handler = lasm.opcodeTable[line.operation];
-    if(handler) {
-      result = handler.symbols(line,result);
-    }
-  });
-  return _.omit(result, 'lc');
-}

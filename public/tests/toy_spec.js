@@ -44,43 +44,43 @@ describe('TOY machine', function() {
       expect(dump.pc()).toEqual(0x15);
     });
     it('raises an event at the start of a step', function() {
-      var handlers = { stepStart: function() {} };
-      spyOn(handlers,"stepStart");
+      var handlers = { onStepStart: function() {} };
+      spyOn(handlers,"onStepStart");
       var toyObj = toy.create(handlers);
       toyObj.load(Uint16Array.from([2,0x10,0x1234]));
       toyObj.step();
-      expect(handlers.stepStart).toHaveBeenCalledWith({pc: 0x10,instruction:toy.cycle.parse(0x1234)});
+      expect(handlers.onStepStart).toHaveBeenCalledWith({pc: 0x10,instruction:toy.cycle.parse(0x1234)});
     });
     it('raises an event at the end of a step', function() {
-      var handlers = { stepEnd: function() {} };
-      spyOn(handlers,"stepEnd");
+      var handlers = { onStepEnd: function() {} };
+      spyOn(handlers,"onStepEnd");
       var map = toy.util.create(handlers);
       spyOn(toy.util,"create").and.returnValue(map);
       var toyObj = toy.create(handlers);
       toyObj.load(Uint16Array.from([2,0x10,0x1234]));
       toyObj.step();
-      expect(handlers.stepEnd).toHaveBeenCalledWith({pc: 0x11,state: {pc: map.pc, registers: map.registers, ram: map.ram}, instruction:toy.cycle.parse(0x1234)});
+      expect(handlers.onStepEnd).toHaveBeenCalledWith({pc: 0x11,state: {pc: map.pc, registers: map.registers, ram: map.ram}, instruction:toy.cycle.parse(0x1234)});
     });
     it('raises an event on reset', function() {
-      var handlers = { reset: function() {} };
-      spyOn(handlers,"reset");
+      var handlers = { onReset: function() {} };
+      spyOn(handlers,"onReset");
       var toyObj = toy.create(handlers);
       toyObj.reset();
-      expect(handlers.reset).toHaveBeenCalledWith({pc:0});
+      expect(handlers.onReset).toHaveBeenCalledWith({pc:0});
     });
     it('register zero is updated on on reset', function() {
-      var handlers = { registerChange: function() {} };
-      spyOn(handlers,"registerChange");
+      var handlers = { onRegisterChange: function() {} };
+      spyOn(handlers,"onRegisterChange");
       var toyObj = toy.create(handlers);
       toyObj.reset();
-      expect(handlers.registerChange).toHaveBeenCalledWith({address: 0, value: 0});
+      expect(handlers.onRegisterChange).toHaveBeenCalledWith({address: 0, value: 0});
     });
     it('raises an event on load', function() {
-      var handlers = { load: function() {} };
-      spyOn(handlers,"load");
+      var handlers = { onLoad: function() {} };
+      spyOn(handlers,"onLoad");
       var toyObj = toy.create(handlers);
       toyObj.load(toy.util.create());
-      expect(handlers.load).toHaveBeenCalledWith({oldpc: 0, pc:0});
+      expect(handlers.onLoad).toHaveBeenCalledWith({oldpc: 0, pc:0});
     });
   });
 
@@ -207,47 +207,47 @@ describe('TOY machine', function() {
         var bytes;
         beforeEach(function() {
           handlers = {
-            memoryChange: function() {},
-            registerChange: function() {},
-            pcChange: function() {}
+            onMemoryChange: function() {},
+            onRegisterChange: function() {},
+            onPcChange: function() {}
           };
 
-          spyOn(handlers,'memoryChange');
-          spyOn(handlers,'registerChange');
-          spyOn(handlers,'pcChange');
+          spyOn(handlers,'onMemoryChange');
+          spyOn(handlers,'onRegisterChange');
+          spyOn(handlers,'onPcChange');
           bytes = toy.util.create(handlers);
         });
         it('changes to pc', function() {
           bytes.pc(0x20);
-          expect(handlers.pcChange).toHaveBeenCalledWith({oldpc: 0, pc: 0x20});
+          expect(handlers.onPcChange).toHaveBeenCalledWith({oldpc: 0, pc: 0x20});
         });
         it('pc changes are 8-bit', function() {
           bytes.pc(0x100);
-          expect(handlers.pcChange).toHaveBeenCalledWith({oldpc: 0, pc: 0x00});
+          expect(handlers.onPcChange).toHaveBeenCalledWith({oldpc: 0, pc: 0x00});
         });
         it('changes to single registers', function() {
           bytes.registers(1,0);
           bytes.registers(0xC,0x42);
-          expect(handlers.registerChange).toHaveBeenCalledWith({address:1, value: 0});
-          expect(handlers.registerChange).toHaveBeenCalledWith({address:0xC, value: 0x42});
+          expect(handlers.onRegisterChange).toHaveBeenCalledWith({address:1, value: 0});
+          expect(handlers.onRegisterChange).toHaveBeenCalledWith({address:0xC, value: 0x42});
         });
         it('changes to all registers', function() {
           bytes.registers([0x10000,1,2,3,4,5,6,7,8,9,0xa,0xb,0xc,0xd,0xe,0xf]);
           _.each(_.range(1,16), function(register) {
-            expect(handlers.registerChange).toHaveBeenCalledWith({address: register,value: register});
+            expect(handlers.onRegisterChange).toHaveBeenCalledWith({address: register,value: register});
           });
         });
         it('register changes are 16-bit', function() {
           bytes.registers(2,0x10000);
-          expect(handlers.registerChange).toHaveBeenCalledWith({address: 2, value: 0x00});
+          expect(handlers.onRegisterChange).toHaveBeenCalledWith({address: 2, value: 0x00});
         });
         it('changes to ram', function() {
           bytes.ram(0x10,0xFF);
-          expect(handlers.memoryChange).toHaveBeenCalledWith({address:0x10, value: 0xFF});
+          expect(handlers.onMemoryChange).toHaveBeenCalledWith({address:0x10, value: 0xFF});
         });
         it('ram changes are 16-bit', function() {
           bytes.ram(2,0x10000);
-          expect(handlers.memoryChange).toHaveBeenCalledWith({address: 2, value: 0});
+          expect(handlers.onMemoryChange).toHaveBeenCalledWith({address: 2, value: 0});
         });
         describe('turning handlers on and off', function() {
           it('disable all handlers', function() {
@@ -255,9 +255,9 @@ describe('TOY machine', function() {
             bytes.pc(0x10);
             bytes.registers(0,0x42);
             bytes.ram(0,0x42);
-            expect(handlers.pcChange).not.toHaveBeenCalled();
-            expect(handlers.registerChange).not.toHaveBeenCalled();
-            expect(handlers.memoryChange).not.toHaveBeenCalled();
+            expect(handlers.onPcChange).not.toHaveBeenCalled();
+            expect(handlers.onRegisterChange).not.toHaveBeenCalled();
+            expect(handlers.onMemoryChange).not.toHaveBeenCalled();
           });
           it('enable all handlers', function() {
             bytes.disableCallbacks();
@@ -265,9 +265,9 @@ describe('TOY machine', function() {
             bytes.pc(0x10);
             bytes.registers(1,0x42);
             bytes.ram(0,0x42);
-            expect(handlers.pcChange).toHaveBeenCalled();
-            expect(handlers.registerChange).toHaveBeenCalled();
-            expect(handlers.memoryChange).toHaveBeenCalled();
+            expect(handlers.onPcChange).toHaveBeenCalled();
+            expect(handlers.onRegisterChange).toHaveBeenCalled();
+            expect(handlers.onMemoryChange).toHaveBeenCalled();
           });
         });
       });

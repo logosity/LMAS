@@ -125,109 +125,109 @@ describe('LMAS', function() {
           spyOn(stubs,"fn2");
           var fns = [stubs.fn1, stubs.fn2];
           spyOn(lmas.events.handlers,"onMemory").and.returnValue(fns);
-          lmas.events.toy.memoryChange({});
+          lmas.events.toy.onMemoryChange({});
           expect(stubs.fn1).toHaveBeenCalled();
           expect(stubs.fn2).toHaveBeenCalled();
         });
         it('updates a memory address', function() {
           lmas.showView('#machine-toy');
-          lmas.events.toy.memoryChange({address:0xc0, value:0x1234});
+          lmas.events.toy.onMemoryChange({address:0xc0, value:0x1234});
           expect($('#MC0').text()).toEqual('1234');
 
-          lmas.events.toy.memoryChange({address:0xc0, value: 0xcf24});
+          lmas.events.toy.onMemoryChange({address:0xc0, value: 0xcf24});
           expect($('#MC0').text()).toEqual('CF24');
         });
         it('invokes stdOut handler only on writes to FF', function() {
           lmas.showView('#machine-toy');
           spyOn(lmas.terminal,"flush");
           spyOn(lmas.terminal,"echo");
-          lmas.events.toy.memoryChange({address:0x42, value: 0x2244});
+          lmas.events.toy.onMemoryChange({address:0x42, value: 0x2244});
           expect(lmas.terminal.flush).not.toHaveBeenCalled();
           expect(lmas.terminal.echo).not.toHaveBeenCalled();
 
-          lmas.events.toy.memoryChange({address:0xFF, value: 0x6869});
+          lmas.events.toy.onMemoryChange({address:0xFF, value: 0x6869});
           expect(lmas.terminal.echo).toHaveBeenCalledWith("h",{flush:false});
           expect(lmas.terminal.echo).toHaveBeenCalledWith("i",{flush:false});
           expect(lmas.terminal.flush).not.toHaveBeenCalled();
-          lmas.events.toy.memoryChange({address:0xFF, value: 0x000});
+          lmas.events.toy.onMemoryChange({address:0xFF, value: 0x000});
           expect(lmas.terminal.flush).toHaveBeenCalled();
         });
         it('animates changes to pc', function() {
-          lmas.events.toy.pcChange({pc:0x10});
+          lmas.events.toy.onPcChange({pc:0x10});
           expect(lmas.animation.stateChange).toHaveBeenCalledWith('#PC',{bgcolor: '#08b9ee'});
         });
         it('animates memory location & pc after load', function() {
-          lmas.events.toy.load({oldpc: 0x42, pc: 0x11});
+          lmas.events.toy.onLoad({oldpc: 0x42, pc: 0x11});
           expect(lmas.animation.stateChange).toHaveBeenCalledWith('#PC',{bgcolor: '#08b9ee', queue:true,persist:true});
           expect(lmas.animation.stateChange).toHaveBeenCalledWith('#M42',{bgcolor: '#FFFFFF', queue:true,persist:true});
           expect(lmas.animation.stateChange).toHaveBeenCalledWith('#M11',{bgcolor: '#08b9ee', queue:true,persist:true});
         });
         it('animates memory location pointed to by pc at step-end', function() {
-          lmas.events.toy.stepEnd({pc: 0x11});
+          lmas.events.toy.onStepEnd({pc: 0x11});
           expect(lmas.animation.stateChange).toHaveBeenCalledWith('#M11',{bgcolor: '#08b9ee'});
         });
         it('stepStart clears the last instruction background color', function() {
           lmas.showView('#machine-toy');
-          lmas.events.toy.stepStart({pc: 0x10, instruction: toy.cycle.parse(0x1234)});
+          lmas.events.toy.onStepStart({pc: 0x10, instruction: toy.cycle.parse(0x1234)});
           expect($('#M10').css('background-color')).toEqual('rgb(255, 255, 255)');
         });
         it('stepEnd sets the last instruction', function() {
-            lmas.events.toy.stepEnd({pc: 0x11, instruction: toy.cycle.parse(0x1234)});
+            lmas.events.toy.onStepEnd({pc: 0x11, instruction: toy.cycle.parse(0x1234)});
             expect(lmas.lastOperation).toEqual(1);
-            lmas.events.toy.stepEnd({pc: 0x12, instruction: toy.cycle.parse(0x0000)});
+            lmas.events.toy.onStepEnd({pc: 0x12, instruction: toy.cycle.parse(0x0000)});
             expect(lmas.lastOperation).toEqual(0);
         });
         describe('animating instructions', function() {
           it('stepEnd animates add and all other type1 instructions', function() {
-            lmas.events.toy.stepEnd({pc: 0x11, instruction: toy.cycle.parse(0x1334)});
+            lmas.events.toy.onStepEnd({pc: 0x11, instruction: toy.cycle.parse(0x1334)});
             expect(lmas.animation.stateChange).toHaveBeenCalledWith('#R3',{bgcolor: '#ff0000',color: '#ffc145'});
             expect(lmas.animation.stateChange).toHaveBeenCalledWith('#R4',{bgcolor: '#ffffff',color: '#ffc145'});
           });
           it('stepEnd animates load', function() {
-            lmas.events.toy.stepEnd({pc: 0x11, instruction: toy.cycle.parse(0x8434)});
+            lmas.events.toy.onStepEnd({pc: 0x11, instruction: toy.cycle.parse(0x8434)});
             expect(lmas.animation.stateChange).toHaveBeenCalledWith('#M34',{bgcolor: '#ffffff',color: '#ffc145'});
           });
           it('stepEnd animates store', function() {
-            lmas.events.toy.stepEnd({pc: 0x11, instruction: toy.cycle.parse(0x9434)});
+            lmas.events.toy.onStepEnd({pc: 0x11, instruction: toy.cycle.parse(0x9434)});
             expect(lmas.animation.stateChange).toHaveBeenCalledWith('#R4',{bgcolor: '#ffffff',color: '#ffc145'});
           });
           it('stepEnd animates load indirect', function() {
             var state = { pc: function(){}, registers: function() {}, ram: function() {} };
             spyOn(state,"registers").and.returnValue(0x34);
-            lmas.events.toy.stepEnd({pc: 0x11, state: state, instruction: toy.cycle.parse(0xA403)});
+            lmas.events.toy.onStepEnd({pc: 0x11, state: state, instruction: toy.cycle.parse(0xA403)});
             expect(state.registers).toHaveBeenCalledWith(3);
             expect(lmas.animation.stateChange).toHaveBeenCalledWith('#R3',{bgcolor: '#ffffff',color: '#ffc145'});
             expect(lmas.animation.stateChange).toHaveBeenCalledWith('#M34',{bgcolor: '#ffffff',color: '#ffc145'});
           });
           it('stepEnd animates store indirect', function() {
-            lmas.events.toy.stepEnd({pc: 0x11, instruction: toy.cycle.parse(0xB403)});
+            lmas.events.toy.onStepEnd({pc: 0x11, instruction: toy.cycle.parse(0xB403)});
             expect(lmas.animation.stateChange).toHaveBeenCalledWith('#R4',{bgcolor: '#ffffff',color: '#ffc145'});
             expect(lmas.animation.stateChange).toHaveBeenCalledWith('#R3',{bgcolor: '#ffffff',color: '#ffc145'});
           });
           it('stepEnd animates branch zero', function() {
-            lmas.events.toy.stepEnd({pc: 0x11, instruction: toy.cycle.parse(0xC242)});
+            lmas.events.toy.onStepEnd({pc: 0x11, instruction: toy.cycle.parse(0xC242)});
             expect(lmas.animation.stateChange).toHaveBeenCalledWith('#R2',{bgcolor: '#ffffff',color: '#ffc145'});
           });
           it('stepEnd animates branch zero', function() {
-            lmas.events.toy.stepEnd({pc: 0x11, instruction: toy.cycle.parse(0xD242)});
+            lmas.events.toy.onStepEnd({pc: 0x11, instruction: toy.cycle.parse(0xD242)});
             expect(lmas.animation.stateChange).toHaveBeenCalledWith('#R2',{bgcolor: '#ffffff',color: '#ffc145'});
           });
           it('stepEnd animates jump register', function() {
-            lmas.events.toy.stepEnd({pc: 0x11, instruction: toy.cycle.parse(0xE200)});
+            lmas.events.toy.onStepEnd({pc: 0x11, instruction: toy.cycle.parse(0xE200)});
             expect(lmas.animation.stateChange).toHaveBeenCalledWith('#R2',{bgcolor: '#ffffff',color: '#ffc145'});
           });
           it('stepEnd animates jump and link', function() {
-            lmas.events.toy.stepEnd({pc: 0x11, instruction: toy.cycle.parse(0xF242)});
+            lmas.events.toy.onStepEnd({pc: 0x11, instruction: toy.cycle.parse(0xF242)});
             expect(lmas.animation.stateChange).toHaveBeenCalledWith('#PC',{bgcolor: '#ffffff',color: '#ffc145'});
             expect(lmas.animation.stateChange).toHaveBeenCalledWith('#R2',{bgcolor: '#ffffff',color: '#ffc145'});
           });
         });
         it('animates changes to memory', function() {
-          lmas.events.toy.memoryChange({address:0xc0, value: 0xcf24});
+          lmas.events.toy.onMemoryChange({address:0xc0, value: 0xcf24});
           expect(lmas.animation.stateChange).toHaveBeenCalledWith('#MC0');
         });
         it('animates changes to registers', function() {
-          lmas.events.toy.registerChange({address:1,value: 0xcf24});
+          lmas.events.toy.onRegisterChange({address:1,value: 0xcf24});
           expect(lmas.animation.stateChange).toHaveBeenCalledWith('#R1');
         });
       });
@@ -257,7 +257,7 @@ describe('LMAS', function() {
         xit('resets the machine', function() {
           spyOn(lmas.toy,"reset");
           lmas.showView('#machine-toy');
-          expect(lmas.toy.reset).toHaveBeenCalled();
+          expect(lmas.toy.onReset).toHaveBeenCalled();
         });
 
         describe('event handlers', function() {

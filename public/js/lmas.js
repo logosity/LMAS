@@ -71,30 +71,30 @@ lmas.events = {
     }
   },
   toy: {
-    memoryChange: function(eventData) {
+    onMemoryChange: function(eventData) {
       _.each(lmas.events.handlers.onMemory(),function(fn) {
         fn(eventData);
       });
     },
-    registerChange: function(eventData) {
+    onRegisterChange: function(eventData) {
       var id = lmas.ui.regId(eventData.address);
       lmas.animation.stateChange(id);
       $(id).text(lmas.ui.hex16(eventData.value));
     },
-    pcChange: function(eventData) {
+    onPcChange: function(eventData) {
       lmas.animation.stateChange('#PC',{bgcolor:'#08b9ee'});
       $('#PC').text(lmas.ui.hex8(eventData.pc));
     },
-    load: function(eventData) {
+    onLoad: function(eventData) {
       lmas.animation.stateChange('#PC',{bgcolor:'#08b9ee',queue:true,persist:true});
       lmas.animation.stateChange(lmas.ui.memId(eventData.oldpc),{bgcolor:'#FFFFFF',queue:true,persist:true});
       lmas.animation.stateChange(lmas.ui.memId(eventData.pc),{bgcolor:'#08b9ee',queue:true,persist:true});
     },
-    stepStart: function(eventData) {
+    onStepStart: function(eventData) {
       $(lmas.ui.memId(eventData.pc)).css('background-color','#FFFFFF');
       lmas.animation.stateChange({bgcolor:'#08b9ee',queue:true,persist:true});
     },
-    stepEnd: function(eventData) {
+    onStepEnd: function(eventData) {
       var config = {bgcolor: "#ffffff", color:'#ffc145'};
       var type1 = function(settings) {
         var sConfig = _.clone(config);
