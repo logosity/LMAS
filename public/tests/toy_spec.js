@@ -66,7 +66,7 @@ describe('TOY machine', function() {
       spyOn(handlers,"onReset");
       var toyObj = toy.create(handlers);
       toyObj.reset();
-      expect(handlers.onReset).toHaveBeenCalledWith({pc:0});
+      expect(handlers.onReset).toHaveBeenCalledWith({pc:10});
     });
     it('register zero is updated on on reset', function() {
       var handlers = { onRegisterChange: function() {} };
@@ -80,7 +80,7 @@ describe('TOY machine', function() {
       spyOn(handlers,"onLoad");
       var toyObj = toy.create(handlers);
       toyObj.load(toy.util.create());
-      expect(handlers.onLoad).toHaveBeenCalledWith({oldpc: 0, pc:0});
+      expect(handlers.onLoad).toHaveBeenCalledWith({oldpc: 0x0A, pc:0x0A});
     });
   });
 
@@ -108,24 +108,24 @@ describe('TOY machine', function() {
      });
   });
   describe('dump',function() {
-    it('can be dumped to bytes', function() {
-      var bytes = toyObj.dump();
-      expect(bytes.length).toEqual(274);
-      expect(bytes.header()).toEqual(1);
-      expect(bytes.pc()).toEqual(0);
-      _.each(bytes.slice(2),function(b) {
+    it('can be dumped to binary', function() {
+      var binary = toyObj.dump();
+      expect(binary.length).toEqual(274);
+      expect(binary.header()).toEqual(1);
+      expect(binary.pc()).toEqual(10);
+      _.each(binary.slice(2),function(b) {
         expect(b).toEqual(0);
       });
     });
   });
   describe('load',function() {
     it('from zero mode (header 0)', function() {
-      var bytes = toy.util.create();
-      bytes.header(0)
-      bytes.pc(3);
-      bytes.set([0, 0, 0, 0x1234,0x45ff,0x3455],2);
+      var binary = toy.util.create();
+      binary.header(0)
+      binary.pc(3);
+      binary.set([0, 0, 0, 0x1234,0x45ff,0x3455],2);
 
-      toyObj.load(bytes);
+      toyObj.load(binary);
 
       var dump = toyObj.dump();
 
@@ -139,14 +139,14 @@ describe('TOY machine', function() {
     });
 
     it('machine state mode (header 1)', function() {
-      var bytes = toy.util.create();
-      bytes.header(1);
-      bytes.pc(0x20);
-      bytes.registers(1, 0x4f56);
-      bytes.ram(0x14, 0x1234);
-      bytes.ram(0xFF, 0xFF00);
+      var binary = toy.util.create();
+      binary.header(1);
+      binary.pc(0x20);
+      binary.registers(1, 0x4f56);
+      binary.ram(0x14, 0x1234);
+      binary.ram(0xFF, 0xFF00);
 
-      toyObj.load(bytes);
+      toyObj.load(binary);
 
       var dump = toyObj.dump();
 
@@ -157,12 +157,12 @@ describe('TOY machine', function() {
     });
 
     it('pc offset mode (header 2)', function() {
-      var bytes = toy.util.create();
-      bytes.header(2);
-      bytes.pc(0x20);
-      bytes.set([0x1234,0x45ff,0x3455],2);
+      var binary = toy.util.create();
+      binary.header(2);
+      binary.pc(0x20);
+      binary.set([0x1234,0x45ff,0x3455],2);
 
-      toyObj.load(bytes);
+      toyObj.load(binary);
 
       var dump = toyObj.dump();
 
@@ -181,18 +181,18 @@ describe('TOY machine', function() {
     });
   });
   describe('TOY util', function() {
-    var bytes;
+    var binary;
     beforeEach(function() {
-      bytes = toy.util.create();
+      binary = toy.util.create();
     });
     describe('decoration', function() {
       it('creates an empty representation of toy binary format', function() {
-        expect(bytes instanceof Uint16Array).toBe(true);
-        expect(bytes.length).toBe(274);
+        expect(binary instanceof Uint16Array).toBe(true);
+        expect(binary.length).toBe(274);
       });
       it('decorates the result with toy.util fns', function() {
         _.each(_.functions(toy.util.fns),function(fn) {
-          expect(_.contains(_.functions(bytes), fn)).toBe(true);
+          expect(_.contains(_.functions(binary), fn)).toBe(true);
         });
       });
       it('decorates an existing representation with fns', function() {
@@ -204,7 +204,7 @@ describe('TOY machine', function() {
       });
       describe('raising change events', function() {
         var handlers;
-        var bytes;
+        var binary;
         beforeEach(function() {
           handlers = {
             onMemoryChange: function() {},
@@ -215,56 +215,56 @@ describe('TOY machine', function() {
           spyOn(handlers,'onMemoryChange');
           spyOn(handlers,'onRegisterChange');
           spyOn(handlers,'onPcChange');
-          bytes = toy.util.create(handlers);
+          binary = toy.util.create(handlers);
         });
         it('changes to pc', function() {
-          bytes.pc(0x20);
-          expect(handlers.onPcChange).toHaveBeenCalledWith({oldpc: 0, pc: 0x20});
+          binary.pc(0x20);
+          expect(handlers.onPcChange).toHaveBeenCalledWith({oldpc: 0x0A, pc: 0x20});
         });
         it('pc changes are 8-bit', function() {
-          bytes.pc(0x100);
-          expect(handlers.onPcChange).toHaveBeenCalledWith({oldpc: 0, pc: 0x00});
+          binary.pc(0x100);
+          expect(handlers.onPcChange).toHaveBeenCalledWith({oldpc: 0x0A, pc: 0x00});
         });
         it('changes to single registers', function() {
-          bytes.registers(1,0);
-          bytes.registers(0xC,0x42);
+          binary.registers(1,0);
+          binary.registers(0xC,0x42);
           expect(handlers.onRegisterChange).toHaveBeenCalledWith({address:1, value: 0});
           expect(handlers.onRegisterChange).toHaveBeenCalledWith({address:0xC, value: 0x42});
         });
         it('changes to all registers', function() {
-          bytes.registers([0x10000,1,2,3,4,5,6,7,8,9,0xa,0xb,0xc,0xd,0xe,0xf]);
+          binary.registers([0x10000,1,2,3,4,5,6,7,8,9,0xa,0xb,0xc,0xd,0xe,0xf]);
           _.each(_.range(1,16), function(register) {
             expect(handlers.onRegisterChange).toHaveBeenCalledWith({address: register,value: register});
           });
         });
         it('register changes are 16-bit', function() {
-          bytes.registers(2,0x10000);
+          binary.registers(2,0x10000);
           expect(handlers.onRegisterChange).toHaveBeenCalledWith({address: 2, value: 0x00});
         });
         it('changes to ram', function() {
-          bytes.ram(0x10,0xFF);
+          binary.ram(0x10,0xFF);
           expect(handlers.onMemoryChange).toHaveBeenCalledWith({address:0x10, value: 0xFF});
         });
         it('ram changes are 16-bit', function() {
-          bytes.ram(2,0x10000);
+          binary.ram(2,0x10000);
           expect(handlers.onMemoryChange).toHaveBeenCalledWith({address: 2, value: 0});
         });
         describe('turning handlers on and off', function() {
           it('disable all handlers', function() {
-            bytes.disableCallbacks();
-            bytes.pc(0x10);
-            bytes.registers(0,0x42);
-            bytes.ram(0,0x42);
+            binary.disableCallbacks();
+            binary.pc(0x10);
+            binary.registers(0,0x42);
+            binary.ram(0,0x42);
             expect(handlers.onPcChange).not.toHaveBeenCalled();
             expect(handlers.onRegisterChange).not.toHaveBeenCalled();
             expect(handlers.onMemoryChange).not.toHaveBeenCalled();
           });
           it('enable all handlers', function() {
-            bytes.disableCallbacks();
-            bytes.enableCallbacks();
-            bytes.pc(0x10);
-            bytes.registers(1,0x42);
-            bytes.ram(0,0x42);
+            binary.disableCallbacks();
+            binary.enableCallbacks();
+            binary.pc(0x10);
+            binary.registers(1,0x42);
+            binary.ram(0,0x42);
             expect(handlers.onPcChange).toHaveBeenCalled();
             expect(handlers.onRegisterChange).toHaveBeenCalled();
             expect(handlers.onMemoryChange).toHaveBeenCalled();
@@ -274,97 +274,101 @@ describe('TOY machine', function() {
     });
 
     describe('getting and setting portions of memory', function() {
-      it('picks out a region of the bytes', function() {
+      it('picks out a region of the binary', function() {
         _.each([2,4,6,8], function(n) {
-          bytes[n] = n;
+          binary[n] = n;
         });
 
-        var result = bytes.region(2,7);
+        var result = binary.region(2,7);
         expect(result).toEqual(Uint16Array.from([2,0,4,0,6,0,8]));
       });
       it('get header', function() {
-        bytes[0] = 0;
-        expect(bytes.header()).toEqual(0);
-        bytes.header(1);
-        expect(bytes.header()).toEqual(1);
+        binary[0] = 0;
+        expect(binary.header()).toEqual(0);
+        binary.header(1);
+        expect(binary.header()).toEqual(1);
       });
       describe('PC manipulation', function() {
+        it('has a default of 10', function() {
+          expect(binary.pc()).toEqual(0x0A)
+        });
+
         it('get and set program counter', function() {
-          bytes.pc(0x10);
-          expect(bytes.pc()).toEqual(0x10);
-          bytes.pc(0x20);
-          expect(bytes.pc()).toEqual(0x20);
-          expect(bytes[1]).toEqual(0x20);
+          binary.pc(0x10);
+          expect(binary.pc()).toEqual(0x10);
+          binary.pc(0x20);
+          expect(binary.pc()).toEqual(0x20);
+          expect(binary[1]).toEqual(0x20);
         });
         it('8-bit overflow', function() {
-          bytes.pc(0x0100);
-          expect(bytes.pc()).toEqual(0x00);
+          binary.pc(0x0100);
+          expect(binary.pc()).toEqual(0x00);
         });
       });
 
       describe('Register manipulation', function() {
         beforeEach(function() {
-          bytes[3] = 0x1234;
-          bytes[17] = 0xFF00;
+          binary[3] = 0x1234;
+          binary[17] = 0xFF00;
         });
         it('get all of it', function() {
-          expect(bytes.registers().length).toEqual(16);
+          expect(binary.registers().length).toEqual(16);
         });
         it('get single registers', function() {
-          expect(bytes.registers(1)).toEqual(0x1234);
-          expect(bytes.registers(15)).toEqual(0xFF00);
+          expect(binary.registers(1)).toEqual(0x1234);
+          expect(binary.registers(15)).toEqual(0xFF00);
         });
         it('set single registers', function() {
-          bytes.registers(1,0x1234);
-          expect(bytes.registers(1)).toEqual(0x1234);
-          expect(bytes[3]).toEqual(0x1234);
+          binary.registers(1,0x1234);
+          expect(binary.registers(1)).toEqual(0x1234);
+          expect(binary[3]).toEqual(0x1234);
         });
         it('set all registers', function() {
           var reg = Uint16Array.from([0,1,2,0,0,0,0,0,0,0,0,0xB,0,0,0,0xF]);
-          bytes.registers(reg);
-          expect(bytes.registers()).toEqual(reg);
+          binary.registers(reg);
+          expect(binary.registers()).toEqual(reg);
         });
         it('16-bit overflow', function() {
-          bytes.registers(2,0x10000);
-          expect(bytes.registers(2)).toEqual(0x00);
+          binary.registers(2,0x10000);
+          expect(binary.registers(2)).toEqual(0x00);
         });
         it('register zero is always zero', function() {
-          bytes.registers(0,0x42);
-          expect(bytes.registers(0)).toEqual(0x00);
+          binary.registers(0,0x42);
+          expect(binary.registers(0)).toEqual(0x00);
         });
       });
       describe('RAM manipulation', function() {
         beforeEach(function() {
-          bytes[18] = 0x1234;
-          bytes[200] = 0xCC00;
-          bytes[273] = 0xFFFF;
+          binary[18] = 0x1234;
+          binary[200] = 0xCC00;
+          binary[273] = 0xFFFF;
         });
 
         it('get all of it', function() {
-          expect(bytes.ram().length).toEqual(256);
+          expect(binary.ram().length).toEqual(256);
         });
         it('getting single addresses', function() {
-          expect(bytes.ram().length).toEqual(256);
-          expect(bytes.ram(0)).toEqual(0x1234);
-          expect(bytes.ram(182)).toEqual(0xCC00);
-          expect(bytes.ram(255)).toEqual(0xFFFF);
+          expect(binary.ram().length).toEqual(256);
+          expect(binary.ram(0)).toEqual(0x1234);
+          expect(binary.ram(182)).toEqual(0xCC00);
+          expect(binary.ram(255)).toEqual(0xFFFF);
         });
         it('setting a single address', function() {
-          bytes.ram(0,0xFF00);
-          expect(bytes.ram(0)).toEqual(0xFF00);
-          expect(bytes[18]).toEqual(0xFF00);
+          binary.ram(0,0xFF00);
+          expect(binary.ram(0)).toEqual(0xFF00);
+          expect(binary[18]).toEqual(0xFF00);
         });
         it('setting all of it', function() {
           var ram = new Uint16Array(256);
           ram[0] = 0x1234;
           ram[10] = 0xFFCC;
           ram[255] = 0xFFFF;
-          bytes.ram(ram);
-          expect(bytes.ram()).toEqual(ram);
+          binary.ram(ram);
+          expect(binary.ram()).toEqual(ram);
         });
         it('16-bit overflow', function() {
-          bytes.ram(2,0x10000);
-          expect(bytes.ram(2)).toEqual(0x00);
+          binary.ram(2,0x10000);
+          expect(binary.ram(2)).toEqual(0x00);
         });
       });
     });

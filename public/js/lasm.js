@@ -27,7 +27,7 @@ lasm.prepare = function(code) {
 };
 
 lasm.buildSymbols = function(code) {
-  var result = {pc: 0, lc: 0, symbols: {}};
+  var result = {pc: 10, lc: 10, symbols: {}}; //per toy spec 10 is the default PC
   _.each(code, function(line,idx) {
     if(_.isEmpty(line)) return;
 

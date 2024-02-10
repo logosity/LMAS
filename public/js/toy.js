@@ -3,80 +3,78 @@
 var toy = {};
 
 toy.create = function(handlers) {
-  var map = toy.util.create(handlers);
+  var machineState = toy.util.create(handlers);
   var result = {};
   result.run = function() {
-    map.disableCallbacks();
+    machineState.disableCallbacks();
     do {
     } while(result.step());
-    map.enableCallbacks();
+    machineState.enableCallbacks();
   };
 
   var raiseEvent = function(name,eventData) {
-    if(map.callbacksEnabled && handlers && handlers[name]) {
+    if(machineState.callbacksEnabled && handlers && handlers[name]) {
       handlers[name](eventData);
     }
   };
 
   result.step = function() {
-    var instruction = toy.cycle.fetch(map.pc,map.ram);
-    raiseEvent("onStepStart", {pc: map.pc(),instruction: instruction});
+    var instruction = toy.cycle.fetch(machineState.pc,machineState.ram);
+    raiseEvent("onStepStart", {pc: machineState.pc(),instruction: instruction});
     var operation = toy.cycle.interpret(instruction);
-    map.pc(map.pc() + 1);
-    var stepResult = operation(map.pc,map.registers,map.ram);
-    var state = {pc: map.pc, registers: map.registers, ram: map.ram};
-    raiseEvent("onStepEnd",{pc: map.pc(),state:state, instruction: instruction});
+    machineState.pc(machineState.pc() + 1);
+    var stepResult = operation(machineState.pc,machineState.registers,machineState.ram);
+    var state = {pc: machineState.pc, registers: machineState.registers, ram: machineState.ram};
+    raiseEvent("onStepEnd",{pc: machineState.pc(),state:state, instruction: instruction});
     return stepResult;
   };
 
   result.reset = function() {
     var bytes = toy.util.create();
-    bytes[0] = 1;
-    bytes[1] = 0;
     result.load(bytes);
     if(handlers && handlers.onReset) {
       handlers.onReset({pc:bytes.pc()});
     }
   };
 
-  result.load = function(bytes) {
-    if(!(bytes instanceof Uint16Array)) {
+  result.load = function(binary) {
+    if(!(binary instanceof Uint16Array)) {
       throw {name: "invalid", message: "invalid binary format for loading"};
     }
-    var oldPc = map.pc();
-    toy.util.decorate(bytes);
-    map.pc(bytes.pc());
+    var oldPc = machineState.pc();
+    toy.util.decorate(binary);
+    machineState.pc(binary.pc());
 
-    switch (bytes.header()) {
+    switch (binary.header()) {
       case 0:
-        _.each(bytes.slice(2), function(opcode,idx) {
-          map.ram(0 + idx, opcode);
+        _.each(binary.slice(2), function(opcode,idx) {
+          machineState.ram(10 + idx, opcode);
         });
         break;
       case 1:
-        map.registers(bytes.registers());
-        map.ram(bytes.ram());
+        machineState.registers(binary.registers());
+        machineState.ram(binary.ram());
         break;
       case 2:
-        _.each(bytes.slice(2), function(opcode,idx) {
-          map.ram(map.pc() + idx, opcode);
+        _.each(binary.slice(2), function(opcode,idx) {
+          machineState.ram(machineState.pc() + idx, opcode);
         });
         break;
       default:
-        throw new Error(`unknown header value: ${bytes.header()}`);
+        throw new Error(`unknown header value: ${binary.header()}`);
     }
 
-    if(map.callbacksEnabled && handlers && handlers.onLoad) {
-      handlers.onLoad({oldpc: oldPc, pc:map.pc()});
+    if(machineState.callbacksEnabled && handlers && handlers.onLoad) {
+      handlers.onLoad({oldpc: oldPc, pc:machineState.pc()});
     }
   };
 
   result.dump = function() {
       var result = toy.util.create();
       result.header(1);
-      result.pc(map.pc());
-      result.registers(map.registers());
-      result.ram(map.ram());
+      result.pc(machineState.pc());
+      result.registers(machineState.registers());
+      result.ram(machineState.ram());
       return result;
   };
   result.reset();
@@ -86,7 +84,12 @@ toy.create = function(handlers) {
 toy.util = {};
 
 toy.util.create = function(handlers) {
-  return toy.util.decorate(new Uint16Array(274),handlers);
+  var binary = toy.util.decorate(new Uint16Array(274), handlers);
+  binary.disableCallbacks();
+  binary.header(1); // create a full machine state including registers
+  binary.pc(0x0A); // per TOY spec PC is in initial 10
+  binary.enableCallbacks();
+  return binary;
 };
 
 toy.util.decorate = function(arr,handlers) {
