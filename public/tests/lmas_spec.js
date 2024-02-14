@@ -272,7 +272,7 @@ describe('LMAS', function() {
           it('loads the editor contents into machine memory', function() {
             spyOn(editor, 'getValue').and.returnValue(' @ 4111');
             $('.editor-load').trigger('click');
-            expect($('.mem-cells').find('#M00').text()).toBe("4111");
+            expect($('.mem-cells').find('#M0A').text()).toBe("4111");
           });
         });
       });

@@ -1,7 +1,8 @@
 # 2/9/2024
 ## bugs
-* per TOY spec, PC should be set to 10 (decimal) by default
 * ensure that FF stdin/stdout behavior works as specified, and can be overridden via header values (cf. STDIN/STDOUT directives)
+* DONE per TOY spec, PC should be set to 10 (decimal) by default
+* change/fix jog terminal command to step at a given pace (make it work like "run slow")
 
 ## TOY machine
 * toy.js: rename "s", "d" and "t" variables to better reflect their purpose in the spec as follows:
@@ -21,7 +22,6 @@
 * `COPY,Rd Rs` (register to register copy) as: ADDR,Rd R0 Rs
 * `SWAP,Rx Rs Rt` macro (swap registers) as: COPY,Rx R
 * `NOP` implement as `ADDR,R0 R0 R0`
-*
 
 ## console and editor
 * add `watch ascii` command to console so that as values are written to STDOUT mem location the resulting ascii value is printed in the console
@@ -39,3 +39,5 @@
 * add documenation of machine behavior (including links to TOY spec)
 * add docs for assembly language
 * consider side-by-side view for source/console on one side and machine on the other
+
+

@@ -36,9 +36,32 @@ function resetFixture() {
 beforeEach(function() {
   resetFixture();
 //  lmastest.startTime = Date.now();
+
+  jasmine.addMatchers({
+    toEqualHex: function() {
+      return {
+        compare: function(actual, expected) {
+          var actualHex = "0x" + actual.toString(16).toUpperCase().padStart(4, '0');
+          var expectedHex = "0x" + expected.toString(16).toUpperCase().padStart(4, '0');
+
+          var result = {};
+          result.pass = actualHex === expectedHex;
+
+          if (result.pass) {
+            result.message = "Expected " + actualHex + " not to be " + expectedHex;
+          } else {
+            result.message = "Expected " + actualHex + " to be " + expectedHex;
+          }
+
+          return result;
+        }
+      };
+    }
+  });
 });
 
 afterEach(function() {
 //  console.log((Date.now() - lmastest.startTime) + " - " + lmastest.lastSpec.description);
 
 });
+

@@ -48,17 +48,12 @@ toy.create = function(handlers) {
     switch (binary.header()) {
       case 0:
         _.each(binary.slice(2), function(opcode,idx) {
-          machineState.ram(10 + idx, opcode);
+          machineState.ram(machineState.pc() + idx, opcode);
         });
         break;
       case 1:
         machineState.registers(binary.registers());
         machineState.ram(binary.ram());
-        break;
-      case 2:
-        _.each(binary.slice(2), function(opcode,idx) {
-          machineState.ram(machineState.pc() + idx, opcode);
-        });
         break;
       default:
         throw new Error(`unknown header value: ${binary.header()}`);

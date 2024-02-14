@@ -7,47 +7,47 @@ describe('TOY machine', function() {
   });
   describe('run', function() {
     it('can run a program', function() {
-      toyObj.load(Uint16Array.from([2,0x10,0x7341,0x7401,0x1234,0x0000]));
+      toyObj.load(Uint16Array.from([0,0x10,0x7341,0x7401,0x1234,0x0000]));
       toyObj.run();
       var dump = toyObj.dump();
-      expect(dump.pc()).toEqual(0x14);
-      expect(dump.registers(3)).toEqual(0x41);
-      expect(dump.registers(4)).toEqual(0x01);
-      expect(dump.registers(2)).toEqual(0x42);
+      expect(dump.pc()).toEqualHex(0x14);
+      expect(dump.registers(3)).toEqualHex(0x41);
+      expect(dump.registers(4)).toEqualHex(0x01);
+      expect(dump.registers(2)).toEqualHex(0x42);
     });
     it('can step through a program', function() {
-      toyObj.load(Uint16Array.from([2,0x10,0x7341,0x7401,0x1234,0x0000]));
+      toyObj.load(Uint16Array.from([0,0x10,0x7341,0x7401,0x1234,0x0000]));
 
       toyObj.step();
       var dump = toyObj.dump();
-      expect(dump.pc()).toEqual(0x11);
-      expect(dump.registers(3)).toEqual(0x41);
-      expect(dump.registers(4)).toEqual(0x00);
-      expect(dump.registers(2)).toEqual(0x00);
+      expect(dump.pc()).toEqualHex(0x11);
+      expect(dump.registers(3)).toEqualHex(0x41);
+      expect(dump.registers(4)).toEqualHex(0x00);
+      expect(dump.registers(2)).toEqualHex(0x00);
 
       toyObj.step();
       var dump = toyObj.dump();
-      expect(dump.pc()).toEqual(0x12);
-      expect(dump.registers(4)).toEqual(0x01);
+      expect(dump.pc()).toEqualHex(0x12);
+      expect(dump.registers(4)).toEqualHex(0x01);
 
       toyObj.step();
       var dump = toyObj.dump();
-      expect(dump.pc()).toEqual(0x13);
-      expect(dump.registers(2)).toEqual(0x42);
+      expect(dump.pc()).toEqualHex(0x13);
+      expect(dump.registers(2)).toEqualHex(0x42);
 
       toyObj.step();
       var dump = toyObj.dump();
-      expect(dump.pc()).toEqual(0x14);
+      expect(dump.pc()).toEqualHex(0x14);
 
       toyObj.step();
       var dump = toyObj.dump();
-      expect(dump.pc()).toEqual(0x15);
+      expect(dump.pc()).toEqualHex(0x15);
     });
     it('raises an event at the start of a step', function() {
       var handlers = { onStepStart: function() {} };
       spyOn(handlers,"onStepStart");
       var toyObj = toy.create(handlers);
-      toyObj.load(Uint16Array.from([2,0x10,0x1234]));
+      toyObj.load(Uint16Array.from([0,0x10,0x1234]));
       toyObj.step();
       expect(handlers.onStepStart).toHaveBeenCalledWith({pc: 0x10,instruction:toy.cycle.parse(0x1234)});
     });
@@ -57,7 +57,7 @@ describe('TOY machine', function() {
       var map = toy.util.create(handlers);
       spyOn(toy.util,"create").and.returnValue(map);
       var toyObj = toy.create(handlers);
-      toyObj.load(Uint16Array.from([2,0x10,0x1234]));
+      toyObj.load(Uint16Array.from([0,0x10,0x1234]));
       toyObj.step();
       expect(handlers.onStepEnd).toHaveBeenCalledWith({pc: 0x11,state: {pc: map.pc, registers: map.registers, ram: map.ram}, instruction:toy.cycle.parse(0x1234)});
     });
@@ -94,16 +94,16 @@ describe('TOY machine', function() {
       toyObj.load(newState);
 
       var firstDump = toyObj.dump();
-      expect(firstDump.pc()).not.toEqual(defaultState.pc());
-      expect(firstDump.registers(1)).not.toEqual(defaultState.registers(1));
-      expect(firstDump.ram(0xC0)).not.toEqual(defaultState.ram(0xC0));
+      expect(firstDump.pc()).not.toEqualHex(defaultState.pc());
+      expect(firstDump.registers(1)).not.toEqualHex(defaultState.registers(1));
+      expect(firstDump.ram(0xC0)).not.toEqualHex(defaultState.ram(0xC0));
 
       toyObj.reset();
 
       var secondDump = toyObj.dump();
-      expect(secondDump.pc()).toEqual(defaultState.pc());
-      expect(secondDump.registers(1)).toEqual(defaultState.registers(1));
-      expect(secondDump.ram(0xC0)).toEqual(defaultState.ram(0xC0));
+      expect(secondDump.pc()).toEqualHex(defaultState.pc());
+      expect(secondDump.registers(1)).toEqualHex(defaultState.registers(1));
+      expect(secondDump.ram(0xC0)).toEqualHex(defaultState.ram(0xC0));
 
      });
   });
@@ -112,7 +112,7 @@ describe('TOY machine', function() {
       var binary = toyObj.dump();
       expect(binary.length).toEqual(274);
       expect(binary.header()).toEqual(1);
-      expect(binary.pc()).toEqual(10);
+      expect(binary.pc()).toEqualHex(10);
       _.each(binary.slice(2),function(b) {
         expect(b).toEqual(0);
       });
@@ -123,19 +123,19 @@ describe('TOY machine', function() {
       var binary = toy.util.create();
       binary.header(0)
       binary.pc(3);
-      binary.set([0, 0, 0, 0x1234,0x45ff,0x3455],2);
+      binary.set([0x1234,0x45ff,0x3455],2);
 
       toyObj.load(binary);
 
       var dump = toyObj.dump();
 
-      expect(dump.pc()).toEqual(0x03);
-      expect(dump.ram(0x00)).toEqual(0);
-      expect(dump.ram(0x01)).toEqual(0);
-      expect(dump.ram(0x02)).toEqual(0);
-      expect(dump.ram(0x03)).toEqual(0x1234);
-      expect(dump.ram(0x04)).toEqual(0x45ff);
-      expect(dump.ram(0x05)).toEqual(0x3455);
+      expect(dump.pc()).toEqualHex(0x03);
+      expect(dump.ram(0x00)).toEqualHex(0);
+      expect(dump.ram(0x01)).toEqualHex(0);
+      expect(dump.ram(0x02)).toEqualHex(0);
+      expect(dump.ram(0x03)).toEqualHex(0x1234);
+      expect(dump.ram(0x04)).toEqualHex(0x45ff);
+      expect(dump.ram(0x05)).toEqualHex(0x3455);
     });
 
     it('machine state mode (header 1)', function() {
@@ -150,28 +150,11 @@ describe('TOY machine', function() {
 
       var dump = toyObj.dump();
 
-      expect(dump.pc()).toEqual(0x20);
-      expect(dump.registers(1)).toEqual(0x4f56);
-      expect(dump.ram(0x14)).toEqual(0x1234);
-      expect(dump.ram(0xFF)).toEqual(0xff00);
+      expect(dump.pc()).toEqualHex(0x20);
+      expect(dump.registers(1)).toEqualHex(0x4f56);
+      expect(dump.ram(0x14)).toEqualHex(0x1234);
+      expect(dump.ram(0xFF)).toEqualHex(0xff00);
     });
-
-    it('pc offset mode (header 2)', function() {
-      var binary = toy.util.create();
-      binary.header(2);
-      binary.pc(0x20);
-      binary.set([0x1234,0x45ff,0x3455],2);
-
-      toyObj.load(binary);
-
-      var dump = toyObj.dump();
-
-      expect(dump.pc()).toEqual(0x20);
-      expect(dump.ram(0x20)).toEqual(0x1234);
-      expect(dump.ram(0x21)).toEqual(0x45ff);
-      expect(dump.ram(0x22)).toEqual(0x3455);
-    });
-
 
     it('will only load an array of type Uint16Array', function() {
       expect(function() {toyObj.load("foobarbaz");}).toThrow({name:"invalid", message: "invalid binary format for loading"});
@@ -290,19 +273,19 @@ describe('TOY machine', function() {
       });
       describe('PC manipulation', function() {
         it('has a default of 10', function() {
-          expect(binary.pc()).toEqual(0x0A)
+          expect(binary.pc()).toEqualHex(0x0A)
         });
 
         it('get and set program counter', function() {
           binary.pc(0x10);
-          expect(binary.pc()).toEqual(0x10);
+          expect(binary.pc()).toEqualHex(0x10);
           binary.pc(0x20);
-          expect(binary.pc()).toEqual(0x20);
-          expect(binary[1]).toEqual(0x20);
+          expect(binary.pc()).toEqualHex(0x20);
+          expect(binary[1]).toEqualHex(0x20);
         });
         it('8-bit overflow', function() {
           binary.pc(0x0100);
-          expect(binary.pc()).toEqual(0x00);
+          expect(binary.pc()).toEqualHex(0x00);
         });
       });
 
@@ -315,26 +298,26 @@ describe('TOY machine', function() {
           expect(binary.registers().length).toEqual(16);
         });
         it('get single registers', function() {
-          expect(binary.registers(1)).toEqual(0x1234);
-          expect(binary.registers(15)).toEqual(0xFF00);
+          expect(binary.registers(1)).toEqualHex(0x1234);
+          expect(binary.registers(15)).toEqualHex(0xFF00);
         });
         it('set single registers', function() {
           binary.registers(1,0x1234);
-          expect(binary.registers(1)).toEqual(0x1234);
-          expect(binary[3]).toEqual(0x1234);
+          expect(binary.registers(1)).toEqualHex(0x1234);
+          expect(binary[3]).toEqualHex(0x1234);
         });
         it('set all registers', function() {
           var reg = Uint16Array.from([0,1,2,0,0,0,0,0,0,0,0,0xB,0,0,0,0xF]);
           binary.registers(reg);
-          expect(binary.registers()).toEqual(reg);
+          expect(binary.registers()).toEqualHex(reg);
         });
         it('16-bit overflow', function() {
           binary.registers(2,0x10000);
-          expect(binary.registers(2)).toEqual(0x00);
+          expect(binary.registers(2)).toEqualHex(0x00);
         });
         it('register zero is always zero', function() {
           binary.registers(0,0x42);
-          expect(binary.registers(0)).toEqual(0x00);
+          expect(binary.registers(0)).toEqualHex(0x00);
         });
       });
       describe('RAM manipulation', function() {
@@ -349,14 +332,14 @@ describe('TOY machine', function() {
         });
         it('getting single addresses', function() {
           expect(binary.ram().length).toEqual(256);
-          expect(binary.ram(0)).toEqual(0x1234);
-          expect(binary.ram(182)).toEqual(0xCC00);
-          expect(binary.ram(255)).toEqual(0xFFFF);
+          expect(binary.ram(0)).toEqualHex(0x1234);
+          expect(binary.ram(182)).toEqualHex(0xCC00);
+          expect(binary.ram(255)).toEqualHex(0xFFFF);
         });
         it('setting a single address', function() {
           binary.ram(0,0xFF00);
-          expect(binary.ram(0)).toEqual(0xFF00);
-          expect(binary[18]).toEqual(0xFF00);
+          expect(binary.ram(0)).toEqualHex(0xFF00);
+          expect(binary[18]).toEqualHex(0xFF00);
         });
         it('setting all of it', function() {
           var ram = new Uint16Array(256);
@@ -368,7 +351,7 @@ describe('TOY machine', function() {
         });
         it('16-bit overflow', function() {
           binary.ram(2,0x10000);
-          expect(binary.ram(2)).toEqual(0x00);
+          expect(binary.ram(2)).toEqualHex(0x00);
         });
       });
     });
@@ -402,112 +385,112 @@ describe('TOY machine', function() {
         map.registers(3,0x41);
         map.registers(4,1);
         expect(callInterpret(0x1234)).toBe(true);
-        expect(map.registers(2)).toEqual(0x42);
-        expect(map.registers(3)).toEqual(0x41);
-        expect(map.registers(4)).toEqual(1);
+        expect(map.registers(2)).toEqualHex(0x42);
+        expect(map.registers(3)).toEqualHex(0x41);
+        expect(map.registers(4)).toEqualHex(1);
       });
       it('subtract', function() {
         map.registers(3,0x43);
         map.registers(4,1);
         expect(callInterpret(0x2234)).toBe(true);
-        expect(map.registers(2)).toEqual(0x42);
-        expect(map.registers(3)).toEqual(0x43);
-        expect(map.registers(4)).toEqual(0x01);
+        expect(map.registers(2)).toEqualHex(0x42);
+        expect(map.registers(3)).toEqualHex(0x43);
+        expect(map.registers(4)).toEqualHex(0x01);
       });
       it('and', function() {
         map.registers(3,0xFF00);
         map.registers(4,0x0F00);
         expect(callInterpret(0x3234)).toBe(true);
-        expect(map.registers(2)).toEqual(0x0f00);
-        expect(map.registers(3)).toEqual(0xff00);
-        expect(map.registers(4)).toEqual(0x0f00);
+        expect(map.registers(2)).toEqualHex(0x0f00);
+        expect(map.registers(3)).toEqualHex(0xff00);
+        expect(map.registers(4)).toEqualHex(0x0f00);
       });
       it('xor', function() {
         map.registers(3,0xFF0F);
         map.registers(4,0x0F00);
         expect(callInterpret(0x4234)).toBe(true);
-        expect(map.registers(2)).toEqual(0xf00f);
-        expect(map.registers(3)).toEqual(0xff0f);
-        expect(map.registers(4)).toEqual(0x0f00);
+        expect(map.registers(2)).toEqualHex(0xf00f);
+        expect(map.registers(3)).toEqualHex(0xff0f);
+        expect(map.registers(4)).toEqualHex(0x0f00);
       });
       it('left shift', function() {
         map.registers(3,0xFF0F);
         map.registers(4,4);
         expect(callInterpret(0x5234)).toBe(true);
-        expect(map.registers(2)).toEqual(0xf0f0);
-        expect(map.registers(3)).toEqual(0xff0f);
-        expect(map.registers(4)).toEqual(4);
+        expect(map.registers(2)).toEqualHex(0xf0f0);
+        expect(map.registers(3)).toEqualHex(0xff0f);
+        expect(map.registers(4)).toEqualHex(4);
       });
       it('right shift', function() {
         map.registers(3,0xFF0F);
         map.registers(4,4);
         expect(callInterpret(0x6234)).toBe(true);
-        expect(map.registers(2)).toEqual(0x0ff0);
-        expect(map.registers(3)).toEqual(0xff0f);
-        expect(map.registers(4)).toEqual(4);
+        expect(map.registers(2)).toEqualHex(0x0ff0);
+        expect(map.registers(3)).toEqualHex(0xff0f);
+        expect(map.registers(4)).toEqualHex(4);
       });
       it('load address', function() {
         expect(callInterpret(0x7334)).toBe(true);
-        expect(map.registers(3)).toEqual(0x34);
+        expect(map.registers(3)).toEqualHex(0x34);
       });
       it('load', function() {
         map.ram(0x34,0x42);
         expect(callInterpret(0x8334)).toBe(true);
-        expect(map.registers(3)).toEqual(0x42);
+        expect(map.registers(3)).toEqualHex(0x42);
       });
       it('store', function() {
         map.registers(3,0x42);
         expect(callInterpret(0x9334)).toBe(true);
-        expect(map.ram(0x34)).toEqual(0x42);
+        expect(map.ram(0x34)).toEqualHex(0x42);
       });
       it('load indirect', function() {
         map.ram(0x34,0x42);
         map.registers(4,0x34);
         expect(callInterpret(0xA304)).toBe(true);
-        expect(map.registers(3)).toEqual(0x42);
+        expect(map.registers(3)).toEqualHex(0x42);
       });
       it('store indirect', function() {
         map.registers(3,0x42);
         map.registers(4,0x34);
         expect(callInterpret(0xB304)).toBe(true);
-        expect(map.ram(0x34)).toEqual(0x42);
+        expect(map.ram(0x34)).toEqualHex(0x42);
       });
       it('branch zero (true)', function() {
         map.pc(0x11);
         map.registers(3,0);
         expect(callInterpret(0xC334)).toBe(true);
-        expect(map.pc()).toEqual(0x34);
+        expect(map.pc()).toEqualHex(0x34);
       });
       it('branch zero (false)', function() {
         map.pc(0x11);
         map.registers(3,1);
         expect(callInterpret(0xC334)).toBe(true);
-        expect(map.pc()).toEqual(0x11);
+        expect(map.pc()).toEqualHex(0x11);
       });
       it('branch positive (true)', function() {
         map.pc(0x11);
         map.registers(3,1);
         expect(callInterpret(0xD334)).toBe(true);
-        expect(map.pc()).toEqual(0x34);
+        expect(map.pc()).toEqualHex(0x34);
       });
       it('branch positive (false)', function() {
         map.pc(0x11);
         map.registers(3,0);
         expect(callInterpret(0xD334)).toBe(true);
-        expect(map.pc()).toEqual(0x11);
+        expect(map.pc()).toEqualHex(0x11);
       });
       it('jump register', function() {
         map.pc(0x11);
         map.registers(3,0x34);
         expect(callInterpret(0xE300)).toBe(true);
-        expect(map.pc()).toEqual(0x34);
+        expect(map.pc()).toEqualHex(0x34);
       });
       it('jump and link', function() {
         map.pc(0x11);
         map.registers(3,0x00);
         expect(callInterpret(0xF334)).toBe(true);
-        expect(map.registers(3)).toEqual(0x11);
-        expect(map.pc()).toEqual(0x34);
+        expect(map.registers(3)).toEqualHex(0x11);
+        expect(map.pc()).toEqualHex(0x34);
       });
     });
   });
